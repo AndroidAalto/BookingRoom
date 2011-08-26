@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="calendar_grid_area_background">#ffffffff</color>
+    <color name="calendar_grid_line_horizontal_color">#ffdddddd</color>
+    <color name="calendar_grid_line_vertical_color">#ffdddddd</color>
+</resources>
