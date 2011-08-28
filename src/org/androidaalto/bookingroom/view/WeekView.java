@@ -34,6 +34,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.AttributeSet;
@@ -64,6 +65,11 @@ public class WeekView extends View {
     private int mHoursWidth;
     private String mAmString;
     private String mPmString;
+    private String[] mHourStrs = {
+            "00", "01", "02", "03", "04", "05",
+            "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16",
+            "17", "18", "19", "20", "21", "22", "23", "00"
+    };
     private Resources mResources;
     private int mViewWidth;
     private int mViewHeight;
@@ -71,8 +77,10 @@ public class WeekView extends View {
     private int mNumDays = 7;
     private int mViewStartY;
     private int mFirstCell;
+    private int mHoursTextHeight;
 
     private static int AMPM_FONT_SIZE = 9;
+    private static int HOURS_FONT_SIZE = 12;
 
     private static final int DAY_GAP = 1;
 
@@ -81,6 +89,8 @@ public class WeekView extends View {
     private static final int HOURS_MARGIN = HOURS_LEFT_MARGIN + HOURS_RIGHT_MARGIN;
 
     private static int mGridAreaBackgroundColor;
+    private static int mHourBackgroundColor;
+    private static int mHourLabelColor;
     private static int mGridLineHorizontalColor;
     private static int mGridLineVerticalColor;
 
@@ -126,6 +136,8 @@ public class WeekView extends View {
                 .getColor(R.color.calendar_grid_line_horizontal_color);
         mGridLineVerticalColor = mResources
                 .getColor(R.color.calendar_grid_line_vertical_color);
+        mHourBackgroundColor = mResources.getColor(R.color.calendar_hour_background);
+        mHourLabelColor = mResources.getColor(R.color.calendar_hour_label);
 
         Paint p = mPaint;
         p.setAntiAlias(true);
@@ -238,8 +250,38 @@ public class WeekView extends View {
      * @param p
      */
     private void drawHours(Rect r, Canvas canvas, Paint p) {
-        // TODO Auto-generated method stub
+        clearHourBackground(r, canvas, p);
 
+        // TODO: Draw a highlight on the selected hour (if needed)
+
+        p.setColor(mHourLabelColor);
+        p.setTextSize(HOURS_FONT_SIZE);
+        p.setTypeface(Typeface.DEFAULT_BOLD);
+        p.setTextAlign(Paint.Align.RIGHT);
+        p.setAntiAlias(true);
+
+        int right = mHoursWidth - HOURS_RIGHT_MARGIN;
+        int y = HOUR_GAP + mHoursTextHeight;
+
+        for (int i = 0; i < 24; i++) {
+            String time = mHourStrs[i];
+            canvas.drawText(time, right, y, p);
+            y += mCellHeight + HOUR_GAP;
+        }
+    }
+
+    private void clearHourBackground(Rect r, Canvas canvas, Paint p) {
+        p.setColor(mHourBackgroundColor);
+        r.top = 0;
+        r.bottom = 24 * (mCellHeight + HOUR_GAP) + HOUR_GAP;
+        r.left = 0;
+        r.right = mHoursWidth;
+        canvas.drawRect(r, p);
+        // Fill the bottom left corner with the default grid background
+        r.top = r.bottom;
+        r.bottom = mBitmapHeight;
+        p.setColor(mGridAreaBackgroundColor);
+        canvas.drawRect(r, p);
     }
 
     /**
@@ -250,7 +292,7 @@ public class WeekView extends View {
     private void drawGridBackground(Rect r, Canvas canvas, Paint p) {
         Paint.Style savedStyle = p.getStyle();
 
-        clearBackground(r, canvas, p);
+        clearViewBackground(r, canvas, p);
 
         drawHorizontalGridLines(canvas, p);
 
@@ -291,7 +333,7 @@ public class WeekView extends View {
         }
     }
 
-    private void clearBackground(Rect r, Canvas canvas, Paint p) {
+    private void clearViewBackground(Rect r, Canvas canvas, Paint p) {
         p.setColor(mGridAreaBackgroundColor);
         r.top = 0;
         r.bottom = mBitmapHeight;
@@ -334,6 +376,10 @@ public class WeekView extends View {
         mViewHeight = height;
         int gridAreaWidth = width - mHoursWidth;
         mCellWidth = (gridAreaWidth - (mNumDays * DAY_GAP)) / mNumDays;
+
+        Paint p = new Paint();
+        p.setTextSize(HOURS_FONT_SIZE);
+        mHoursTextHeight = (int) Math.abs(p.ascent());
 
         remeasure(width, height);
     }

@@ -3,4 +3,6 @@
     <color name="calendar_grid_area_background">#ffffffff</color>
     <color name="calendar_grid_line_horizontal_color">#ffdddddd</color>
     <color name="calendar_grid_line_vertical_color">#ffdddddd</color>
+    <color name="calendar_hour_background">#ffdedede</color>
+    <color name="calendar_hour_label">#ff000000</color>
 </resources>
