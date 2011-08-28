@@ -21,9 +21,12 @@ package org.androidaalto.bookingroom.logic;
 
 import org.androidaalto.bookingroom.model.Meeting;
 import org.androidaalto.bookingroom.model.User;
+import org.androidaalto.bookingroom.model.db.MeetingDb;
+import org.androidaalto.bookingroom.model.db.UserDb;
 
 import android.text.format.DateUtils;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +41,7 @@ public class MeetingManager {
     public static MeetingInfo book(MeetingInfo meetingInfo) {
         if (meetingInfo.getStart().before(new Date()))
             throw new IllegalArgumentException("Invalid starting time");
+
         if (!meetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
             throw new IllegalArgumentException("Clashing meeting");
         final User user = userDb.get(meetingInfo.getUser().getEmail());
@@ -51,8 +55,8 @@ public class MeetingManager {
         return new MeetingInfo(null, meeting.getStart(), meeting.getEnd(), meeting.getTitle());
     }
 
-    public static List<MeetingInfo> getMeetings(Date from, int offsetDays) {
-        Date end = new Date(from.getTime() + (((long) offsetDays) * 86400000L));
+    public static List<MeetingInfo> getMeetings(Timestamp from, int offsetDays) {
+        Timestamp end = new Timestamp(from.getTime() + (((long) offsetDays) * 86400000L));
         List<Meeting> meetings = meetingDb.getMeetings(from, end);
         List<MeetingInfo> meetingInfos = new ArrayList<MeetingInfo>();
         for (Meeting meeting : meetings) {

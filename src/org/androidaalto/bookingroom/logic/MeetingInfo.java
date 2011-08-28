@@ -19,6 +19,7 @@
 
 package org.androidaalto.bookingroom.logic;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -26,11 +27,11 @@ import java.util.Date;
  */
 public class MeetingInfo {
     private final UserInfo user;
-    private final Date start;
-    private final Date end;
+    private final Timestamp start;
+    private final Timestamp end;
     private final String title;
 
-    public MeetingInfo(UserInfo user, Date start, Date end, String title) {
+    public MeetingInfo(UserInfo user, Timestamp start, Timestamp end, String title) {
         this.user = user;
         this.start = start;
         this.end = end;
@@ -41,11 +42,11 @@ public class MeetingInfo {
         return user;
     }
 
-    public Date getStart() {
+    public Timestamp getStart() {
         return start;
     }
 
-    public Date getEnd() {
+    public Timestamp getEnd() {
         return end;
     }
 

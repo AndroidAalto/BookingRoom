@@ -19,6 +19,8 @@
 
 package org.androidaalto.bookingroom.model;
 
+import android.database.Cursor;
+
 /**
  * @author hannu
  */
@@ -28,17 +30,31 @@ public class User {
     private final String email;
     private final String password;
     private final int salt;
+    private final Boolean admin;
 
     public User(String name, String email) {
-        this(null, name, email, null, -1);
+        this(null, name, email, null, -1, false);
     }
 
-    public User(Integer id, String name, String email, String password, int salt) {
+    public User(Integer id, String name, String email, String password, int salt, Boolean admin) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
         this.salt = salt;
+        this.admin = admin;
+    }
+
+    /**
+     * @param cursor
+     */
+    public User(Cursor cursor) {
+        this.id = cursor.getInt(0);
+        this.name = cursor.getString(1);
+        this.email = cursor.getString(2);
+        this.password = "";
+        this.salt = 0;
+        this.admin = false;
     }
 
     public Integer getId() {
@@ -59,5 +75,9 @@ public class User {
 
     public int getSalt() {
         return salt;
+    }
+    
+    public Boolean is_admin() {
+        return admin;
     }
 }
