@@ -70,7 +70,7 @@ public class WeekView extends View {
 
     Time mBaseDate;
     private Time mCurrentTime;
-    private int mHoursWidth = HOURS_MARGIN;
+    private int mHoursWidth;
     private String[] mHourStrs = {
             "00", "01", "02", "03", "04", "05",
             "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16",
@@ -170,6 +170,18 @@ public class WeekView extends View {
         mBaseDate = new Time();
         long millis = System.currentTimeMillis();
         mBaseDate.set(millis);
+        
+        Paint p = mPaint;
+        p.setAntiAlias(true);
+        // Figure out how much space we need for the 3-letter names
+        // in the worst case.
+        p.setTextSize(NORMAL_FONT_SIZE);
+        p.setTypeface(Typeface.DEFAULT_BOLD);
+        String[] hoursStrs = {
+                " 00", " 24"
+        };
+        mHoursWidth = computeMaxStringWidth(0, hoursStrs, p);
+        mHoursWidth += HOURS_MARGIN;
     }
 
     /**
