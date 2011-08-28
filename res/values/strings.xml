@@ -2,4 +2,6 @@
 <resources>
     <string name="hello">Hello World, MainActivity!</string>
     <string name="app_name">BookingRoom</string>
+    <!-- Order of weekday/day label in week view -->
+    <string name="weekday_day">%1$s %2$s</string>
 </resources>
