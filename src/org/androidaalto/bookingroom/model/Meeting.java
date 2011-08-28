@@ -19,10 +19,7 @@
 
 package org.androidaalto.bookingroom.model;
 
-import android.database.Cursor;
-
-import java.sql.Timestamp;
-import java.util.Date;
+import android.text.format.Time;
 
 /**
  * @author hannu
@@ -30,31 +27,20 @@ import java.util.Date;
 public class Meeting {
     private final Integer id;
     private final int userId;
-    private final Timestamp start;
-    private final Timestamp end;
+    private final Time start;
+    private final Time end;
     private final String title;
 
-    public Meeting(int userId, Timestamp start, Timestamp end, String title) {
-        this(null, userId, start, end, title);
+    public Meeting(int userId, String title, Time start, Time end ) {
+        this(null, userId, title, start, end);
     }
 
-    public Meeting(Integer id, int userId, Timestamp start, Timestamp end, String title) {
+    public Meeting(Integer id, int userId, String title, Time start, Time end) {
         this.id = id;
         this.userId = userId;
         this.start = start;
         this.end = end;
         this.title = title;
-    }
-
-    /**
-     * @param cursor
-     */
-    public Meeting(Cursor cursor) {
-        this.id = cursor.getInt(0);
-        this.userId = cursor.getInt(1);
-        this.start = new Timestamp(cursor.getLong(2));
-        this.end = new Timestamp(cursor.getLong(3));
-        this.title = cursor.getString(4);
     }
 
     public Integer getId() {
@@ -65,11 +51,11 @@ public class Meeting {
         return userId;
     }
 
-    public Timestamp getStart() {
+    public Time getStart() {
         return start;
     }
 
-    public Timestamp getEnd() {
+    public Time getEnd() {
         return end;
     }
 

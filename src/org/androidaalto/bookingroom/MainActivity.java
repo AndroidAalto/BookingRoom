@@ -19,6 +19,7 @@
 
 package org.androidaalto.bookingroom;
 
+import org.androidaalto.bookingroom.model.Meeting;
 import org.androidaalto.bookingroom.model.User;
 import org.androidaalto.bookingroom.model.db.DataBaseHelper;
 import org.androidaalto.bookingroom.model.db.MeetingDb;
@@ -26,9 +27,14 @@ import org.androidaalto.bookingroom.model.db.UserDb;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.text.format.Time;
 import android.util.Log;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 
 public class MainActivity extends Activity {
     DataBaseHelper myDbHelper = null;
@@ -45,6 +51,7 @@ public class MainActivity extends Activity {
     @Override
     public void onPause() {
         super.onPause();
+
         if ( myDbHelper != null ) {
             myDbHelper.close();
         }
@@ -64,6 +71,20 @@ public class MainActivity extends Activity {
         Log.e("DBW", ""+meetingDB.returnMeetingCount());
         User myUser = userDB.get("test@test.com");
         Log.e("DBW", ""+ myUser.getName());
-        Log.e("DBW", ""+meetingDB.getMeetings(new Timestamp(1314519235 * 1000), new Timestamp(1314522839 * 1000)));
+        
+        ArrayList<Meeting> myMeetings = null;
+        
+        Time start = new Time();
+        start.set(26, 8 - 1, 2011); // 0-11 !!
+        Time end = new Time();
+        end.set(30, 8 - 1, 2011); // 0-11 !!
+        
+        myMeetings = meetingDB.getMeetings(start, end) ;
+        
+        if ( myMeetings.size() > 0 ) {
+            for ( Meeting m : myMeetings) {
+                Log.e("DBW", "Id: " + m.getId() + " Title: " + m.getTitle());
+            }
+        }
     }
 }

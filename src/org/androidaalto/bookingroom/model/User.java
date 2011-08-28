@@ -45,18 +45,6 @@ public class User {
         this.admin = admin;
     }
 
-    /**
-     * @param cursor
-     */
-    public User(Cursor cursor) {
-        this.id = cursor.getInt(0);
-        this.name = cursor.getString(1);
-        this.email = cursor.getString(2);
-        this.password = "";
-        this.salt = 0;
-        this.admin = false;
-    }
-
     public Integer getId() {
         return id;
     }
