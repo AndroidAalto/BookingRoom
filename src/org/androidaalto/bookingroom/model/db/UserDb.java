@@ -67,7 +67,14 @@ public class UserDb {
             Cursor cursor = db.rawQuery("SELECT * FROM user WHERE email == '" + email + "' LIMIT 1", null);
 
             if ( cursor.moveToNext() ) {
-                user = new User(cursor);
+                user = new User(
+                        cursor.getInt(0),
+                        cursor.getString(1),
+                        cursor.getString(2),
+                        cursor.getString(3),
+                        cursor.getInt(4),
+                        false //TODO
+                );
             }
             
             db.close();

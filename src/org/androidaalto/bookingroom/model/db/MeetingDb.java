@@ -23,9 +23,9 @@ import org.androidaalto.bookingroom.model.Meeting;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.format.Time;
 import android.util.Log;
 
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
@@ -36,20 +36,35 @@ public class MeetingDb {
         this.dbHelper = dbh;
     }  
     
-    public ArrayList<Meeting> getMeetings(Timestamp start, Timestamp end) {
+    public ArrayList<Meeting> getMeetings(Time start, Time end) {
         
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         ArrayList<Meeting> records = new ArrayList<Meeting>();
         
         try { 
-            SimpleDateFormat s = new SimpleDateFormat("dd/MM/yyyy");
-            Log.e("MeetingDB", ""+s.format(start));
+            Log.e("TEST", "Hello");
+            Log.e("TEST", ""+ start);
+            Log.e("TEST", ""+ start.toMillis(true));
+            Log.e("TEST", ""+ end.toMillis(true));
             
-            Cursor cursor = db.rawQuery("SELECT * FROM meeting WHERE start > '" + start + "' AND end < '" + end + "'", null);
+            Cursor cursor = db.rawQuery("SELECT * FROM meeting WHERE start > '" + start.toMillis(true) + "' AND end < '" + end.toMillis(true) + "'", null);
 
             while ( cursor.moveToNext() ) {
                 Log.e("MeetingDB", "creating meeting object");
-                Meeting m = new Meeting(cursor);
+                
+                Time startT = new Time();
+                startT.set(cursor.getLong(3));
+                Time endT = new Time();
+                endT.set(cursor.getLong(4));
+                
+                
+                Meeting m = new Meeting(
+                        cursor.getInt(0),
+                        cursor.getInt(1),
+                        cursor.getString(2),
+                        startT,
+                        endT
+                );
                 records.add(m);
             }
             
@@ -100,7 +115,18 @@ public class MeetingDb {
             Cursor cursor = db.rawQuery("SELECT * FROM meeting WHERE id == '" + last_row_id + "' LIMIT 1", null);
 
             if ( cursor.moveToNext() ) {
-                meeting = new Meeting(cursor);
+                Time startT = new Time();
+                startT.set(cursor.getLong(3));
+                Time endT = new Time();
+                endT.set(cursor.getLong(4));
+                
+                meeting = new Meeting(
+                        cursor.getInt(0),
+                        cursor.getInt(1),
+                        cursor.getString(2),
+                        startT,
+                        endT
+                );
             }
             
             db.close();

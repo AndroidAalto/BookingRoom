@@ -19,19 +19,22 @@
 
 package org.androidaalto.bookingroom.logic;
 
+import android.text.format.Time;
+
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * @author hannu
  */
 public class MeetingInfo {
     private final UserInfo user;
-    private final Timestamp start;
-    private final Timestamp end;
+    private final Time start;
+    private final Time end;
     private final String title;
 
-    public MeetingInfo(UserInfo user, Timestamp start, Timestamp end, String title) {
+    public MeetingInfo(UserInfo user, Time start, Time end, String title) {
         this.user = user;
         this.start = start;
         this.end = end;
@@ -42,11 +45,11 @@ public class MeetingInfo {
         return user;
     }
 
-    public Timestamp getStart() {
+    public Time getStart() {
         return start;
     }
 
-    public Timestamp getEnd() {
+    public Time getEnd() {
         return end;
     }
 
