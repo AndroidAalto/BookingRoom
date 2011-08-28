@@ -51,11 +51,10 @@ public class WeekView extends View {
 
     private DayHeader[] dayHeaders = new DayHeader[32];
 
-    private static final int HOUR_GAP = 1;
     // For drawing to an off-screen Canvas
     private Bitmap mOffscreenBitmap;
     private Canvas mOffscreenCanvas;
-    
+
     private boolean mRedrawScreen = true;
     private boolean mRemeasure = true;
     private int mBitmapHeight;
@@ -71,9 +70,7 @@ public class WeekView extends View {
 
     Time mBaseDate;
     private Time mCurrentTime;
-    private int mHoursWidth;
-    private String mAmString;
-    private String mPmString;
+    private int mHoursWidth = HOURS_MARGIN;
     private String[] mHourStrs = {
             "00", "01", "02", "03", "04", "05",
             "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16",
@@ -100,11 +97,11 @@ public class WeekView extends View {
     private static float mScale = 0; // Used for supporting different screen
                                      // densities
 
-    private static int AMPM_FONT_SIZE = 9;
     private static int HOURS_FONT_SIZE = 12;
     private static int NORMAL_FONT_SIZE = 12;
 
     private static final int DAY_GAP = 1;
+    private static final int HOUR_GAP = 1;
 
     private static final int HOURS_LEFT_MARGIN = 2;
     private static final int HOURS_RIGHT_MARGIN = 4;
@@ -116,9 +113,9 @@ public class WeekView extends View {
     private static int mGridLineHorizontalColor;
     private static int mGridLineVerticalColor;
     private static int mDateBannerBackgroundColor;
+    private static int mDateBannerTextColor;
     private static int mSaturdayColor;
     private static int mSundayColor;
-    private static int mCalendarDateBannerTextColor;
 
     /**
      * @param context
@@ -133,8 +130,7 @@ public class WeekView extends View {
      * @param attrs
      */
     public WeekView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
+        this(context, attrs, 0);
     }
 
     /**
@@ -151,17 +147,20 @@ public class WeekView extends View {
      * Initializes all the parameters needed to draw this view.
      */
     private void init() {
-        if (mScale == 0) {
-            mScale = getContext().getResources().getDisplayMetrics().density;
-            if (mScale != 1) {
-                NORMAL_FONT_SIZE *= mScale;
-                HOURS_FONT_SIZE *= mScale;
-                AMPM_FONT_SIZE *= mScale;
-            }
-        }
+        calculateScaleFonts();
 
         mResources = this.getContext().getResources();
 
+        initTimeAndDates();
+
+        initColors();
+
+        initDayStrings();
+
+        recalc();
+    }
+
+    private void initTimeAndDates() {
         mStartDay = Utils.getFirstDayOfWeek();
 
         mCurrentTime = new Time();
@@ -171,31 +170,12 @@ public class WeekView extends View {
         mBaseDate = new Time();
         long millis = System.currentTimeMillis();
         mBaseDate.set(millis);
+    }
 
-        mGridAreaBackgroundColor = mResources.getColor(R.color.calendar_grid_area_background);
-        mGridLineHorizontalColor = mResources
-                .getColor(R.color.calendar_grid_line_horizontal_color);
-        mGridLineVerticalColor = mResources
-                .getColor(R.color.calendar_grid_line_vertical_color);
-        mHourBackgroundColor = mResources.getColor(R.color.calendar_hour_background);
-        mHourLabelColor = mResources.getColor(R.color.calendar_hour_label);
-        mDateBannerBackgroundColor = mResources.getColor(R.color.calendar_date_banner_background);
-        mSaturdayColor = mResources.getColor(R.color.week_saturday);
-        mSundayColor = mResources.getColor(R.color.week_sunday);
-        mCalendarDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
-
-        Paint p = mPaint;
-        p.setAntiAlias(true);
-
-        mAmString = DateUtils.getAMPMString(Calendar.AM);
-        mPmString = DateUtils.getAMPMString(Calendar.PM);
-        String[] ampm = {
-                mAmString, mPmString
-        };
-        p.setTextSize(AMPM_FONT_SIZE);
-        mHoursWidth = computeMaxStringWidth(mHoursWidth, ampm, p);
-        mHoursWidth += HOURS_MARGIN;
-
+    /**
+     * Initializes day strings and calculates the space needed to display them
+     */
+    private void initDayStrings() {
         // Allocate space for 2 weeks worth of weekday names so that we can
         // easily start the week display at any week day.
         mDayStrs = new String[14];
@@ -218,8 +198,10 @@ public class WeekView extends View {
 
             mDayStrs2Letter[index + 7] = mDayStrs2Letter[index];
         }
-
-        // Figure out how much space we need for the 3-letter abbrev names
+        
+        Paint p = mPaint;
+        p.setAntiAlias(true);
+        // Figure out how much space we need for the 3-letter names
         // in the worst case.
         p.setTextSize(NORMAL_FONT_SIZE);
         p.setTypeface(Typeface.DEFAULT_BOLD);
@@ -228,8 +210,30 @@ public class WeekView extends View {
         };
         mDateStrWidth = computeMaxStringWidth(0, dateStrs, p);
         mDateStrWidth += computeMaxStringWidth(0, mDayStrs, p);
+    }
 
-        recalc();
+    private void initColors() {
+        mGridAreaBackgroundColor = mResources.getColor(R.color.calendar_grid_area_background);
+        mGridLineHorizontalColor = mResources
+                .getColor(R.color.calendar_grid_line_horizontal_color);
+        mGridLineVerticalColor = mResources
+                .getColor(R.color.calendar_grid_line_vertical_color);
+        mHourBackgroundColor = mResources.getColor(R.color.calendar_hour_background);
+        mHourLabelColor = mResources.getColor(R.color.calendar_hour_label);
+        mDateBannerBackgroundColor = mResources.getColor(R.color.calendar_date_banner_background);
+        mSaturdayColor = mResources.getColor(R.color.week_saturday);
+        mSundayColor = mResources.getColor(R.color.week_sunday);
+        mDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
+    }
+
+    private void calculateScaleFonts() {
+        if (mScale == 0) {
+            mScale = getContext().getResources().getDisplayMetrics().density;
+            if (mScale != 1) {
+                NORMAL_FONT_SIZE *= mScale;
+                HOURS_FONT_SIZE *= mScale;
+            }
+        }
     }
 
     /**
@@ -316,19 +320,7 @@ public class WeekView extends View {
      * @param p
      */
     private void drawDayHeaderLoop(Rect r, Canvas canvas, Paint p) {
-        // Draw the horizontal day background banner
-        p.setColor(mDateBannerBackgroundColor);
-        r.top = 0;
-        r.bottom = mBannerPlusMargin;
-        r.left = 0;
-        r.right = mHoursWidth + mNumDays * (mCellWidth + DAY_GAP);
-        canvas.drawRect(r, p);
-
-        // Fill the extra space on the right side with the default background
-        r.left = r.right;
-        r.right = mViewWidth;
-        p.setColor(mGridAreaBackgroundColor);
-        canvas.drawRect(r, p);
+        clearDayBannerBackground(r, canvas, p);
 
         // TODO: Draw a highlight on the selected day (if any)
 
@@ -354,6 +346,21 @@ public class WeekView extends View {
 
     }
 
+    private void clearDayBannerBackground(Rect r, Canvas canvas, Paint p) {
+        p.setColor(mDateBannerBackgroundColor);
+        r.top = 0;
+        r.bottom = mBannerPlusMargin;
+        r.left = 0;
+        r.right = mHoursWidth + mNumDays * (mCellWidth + DAY_GAP);
+        canvas.drawRect(r, p);
+
+        // Fill the extra space on the right side with the default background
+        r.left = r.right;
+        r.right = mViewWidth;
+        p.setColor(mGridAreaBackgroundColor);
+        canvas.drawRect(r, p);
+    }
+
     /**
      * @param string
      * @param day
@@ -370,7 +377,7 @@ public class WeekView extends View {
         } else if (Utils.isSunday(day, mStartDay)) {
             p.setColor(mSundayColor);
         } else {
-            p.setColor(mCalendarDateBannerTextColor);
+            p.setColor(mDateBannerTextColor);
         }
 
         int dateNum = mFirstDate + day;
