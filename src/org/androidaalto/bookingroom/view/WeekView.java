@@ -41,8 +41,8 @@ public class WeekView extends View {
 
     private static final int HOUR_GAP = 1;
     // For drawing to an off-screen Canvas
-    private Bitmap mBitmap;
-    private Canvas mCanvas;
+    private Bitmap mOffscreenBitmap;
+    private Canvas mOffscreenCanvas;
     private boolean mRedrawScreen = true;
     private boolean mRemeasure = true;
     private int mBitmapHeight;
@@ -55,6 +55,7 @@ public class WeekView extends View {
     private Rect mSrcRect = new Rect();
     private Rect mDestRect = new Rect();
     private Paint mPaint = new Paint();
+
     private Time mCurrentTime;
     private int mHoursWidth;
     private String mAmString;
@@ -75,9 +76,9 @@ public class WeekView extends View {
     private static final int HOURS_RIGHT_MARGIN = 4;
     private static final int HOURS_MARGIN = HOURS_LEFT_MARGIN + HOURS_RIGHT_MARGIN;
 
-    private static int mCalendarGridAreaBackground;
-    private static int mCalendarGridLineHorizontalColor;
-    private static int mCalendarGridLineVerticalColor;
+    private static int mGridAreaBackgroundColor;
+    private static int mGridLineHorizontalColor;
+    private static int mGridLineVerticalColor;
 
     /**
      * @param context
@@ -106,6 +107,9 @@ public class WeekView extends View {
         init();
     }
 
+    /**
+     * Initializes all the parameters needed to draw this view.
+     */
     private void init() {
         mResources = this.getContext().getResources();
 
@@ -113,10 +117,10 @@ public class WeekView extends View {
         long currentTime = System.currentTimeMillis();
         mCurrentTime.set(currentTime);
 
-        mCalendarGridAreaBackground = mResources.getColor(R.color.calendar_grid_area_background);
-        mCalendarGridLineHorizontalColor = mResources
+        mGridAreaBackgroundColor = mResources.getColor(R.color.calendar_grid_area_background);
+        mGridLineHorizontalColor = mResources
                 .getColor(R.color.calendar_grid_line_horizontal_color);
-        mCalendarGridLineVerticalColor = mResources
+        mGridLineVerticalColor = mResources
                 .getColor(R.color.calendar_grid_line_vertical_color);
 
         Paint p = mPaint;
@@ -152,28 +156,29 @@ public class WeekView extends View {
      * @see android.view.View#onDraw(android.graphics.Canvas)
      */
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(Canvas viewCanvas) {
         if (mRemeasure) {
             remeasure(getWidth(), getHeight());
             mRemeasure = false;
         }
 
-        if (mRedrawScreen && mCanvas != null) {
-            doDraw(mCanvas);
+        if (mRedrawScreen && mOffscreenCanvas != null) {
+            drawFullWeekView(mOffscreenCanvas);
             mRedrawScreen = false;
         }
 
         // TODO: handle scrolling
 
-        if (mBitmap != null) {
-            drawCalendarView(canvas);
+        if (mOffscreenBitmap != null) {
+            copyBitmapToCanvas(mOffscreenBitmap, viewCanvas);
         }
     }
 
     /**
+     * @param bitmap
      * @param canvas
      */
-    private void drawCalendarView(Canvas canvas) {
+    private void copyBitmapToCanvas(Bitmap bitmap, Canvas canvas) {
         // Copy the scrollable region from the big bitmap to the canvas.
         Rect src = mSrcRect;
         Rect dest = mDestRect;
@@ -191,14 +196,14 @@ public class WeekView extends View {
         canvas.save();
         canvas.clipRect(dest);
         canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-        canvas.drawBitmap(mBitmap, src, dest, null);
+        canvas.drawBitmap(bitmap, src, dest, null);
         canvas.restore();
     }
 
     /**
-     * @param mCanvas2
+     * @param canvas
      */
-    private void doDraw(Canvas canvas) {
+    private void drawFullWeekView(Canvas canvas) {
         Paint p = mPaint;
         Rect r = mRect;
         int lineY = mCurrentTime.hour * (mCellHeight + HOUR_GAP)
@@ -241,16 +246,34 @@ public class WeekView extends View {
     private void drawGridBackground(Rect r, Canvas canvas, Paint p) {
         Paint.Style savedStyle = p.getStyle();
 
-        // Clear the background
-        p.setColor(mCalendarGridAreaBackground);
-        r.top = 0;
-        r.bottom = mBitmapHeight;
-        r.left = 0;
-        r.right = mViewWidth;
-        canvas.drawRect(r, p);
+        clearBackground(r, canvas, p);
 
-        // Draw the horizontal grid lines
-        p.setColor(mCalendarGridLineHorizontalColor);
+        drawHorizontalGridLines(canvas, p);
+
+        drawVerticalGridLines(canvas, p);
+
+        // Restore the saved style.
+        p.setStyle(savedStyle);
+        p.setAntiAlias(true);
+    }
+
+    private void drawVerticalGridLines(Canvas canvas, Paint p) {
+        p.setColor(mGridLineVerticalColor);
+        p.setStyle(Style.STROKE);
+        p.setStrokeWidth(0);
+        p.setAntiAlias(false);
+        float startY = 0;
+        float stopY = HOUR_GAP + 24 * (mCellHeight + HOUR_GAP);
+        float deltaX = mCellWidth + DAY_GAP;
+        float x = mHoursWidth + mCellWidth;
+        for (int day = 0; day < mNumDays; day++) {
+            canvas.drawLine(x, startY, x, stopY, p);
+            x += deltaX;
+        }
+    }
+
+    private void drawHorizontalGridLines(Canvas canvas, Paint p) {
+        p.setColor(mGridLineHorizontalColor);
         p.setStyle(Style.STROKE);
         p.setStrokeWidth(0);
         p.setAntiAlias(false);
@@ -262,21 +285,15 @@ public class WeekView extends View {
             canvas.drawLine(startX, y, stopX, y, p);
             y += deltaY;
         }
+    }
 
-        // Draw the vertical grid lines
-        p.setColor(mCalendarGridLineVerticalColor);
-        float startY = 0;
-        float stopY = HOUR_GAP + 24 * (mCellHeight + HOUR_GAP);
-        float deltaX = mCellWidth + DAY_GAP;
-        float x = mHoursWidth + mCellWidth;
-        for (int day = 0; day < mNumDays; day++) {
-            canvas.drawLine(x, startY, x, stopY, p);
-            x += deltaX;
-        }
-
-        // Restore the saved style.
-        p.setStyle(savedStyle);
-        p.setAntiAlias(true);
+    private void clearBackground(Rect r, Canvas canvas, Paint p) {
+        p.setColor(mGridAreaBackgroundColor);
+        r.top = 0;
+        r.bottom = mBitmapHeight;
+        r.left = 0;
+        r.right = mViewWidth;
+        canvas.drawRect(r, p);
     }
 
     /**
@@ -296,13 +313,14 @@ public class WeekView extends View {
     private void createOffscreenBitmapAndCanvas(int width, int bottomSpace) {
         // Create an off-screen bitmap that we can draw into.
         mBitmapHeight = HOUR_GAP + 24 * (mCellHeight + HOUR_GAP) + bottomSpace;
-        if ((mBitmap == null || mBitmap.getHeight() < mBitmapHeight) && width > 0 &&
+        if ((mOffscreenBitmap == null || mOffscreenBitmap.getHeight() < mBitmapHeight) && width > 0
+                &&
                 mBitmapHeight > 0) {
-            if (mBitmap != null) {
-                mBitmap.recycle();
+            if (mOffscreenBitmap != null) {
+                mOffscreenBitmap.recycle();
             }
-            mBitmap = Bitmap.createBitmap(width, mBitmapHeight, Bitmap.Config.RGB_565);
-            mCanvas = new Canvas(mBitmap);
+            mOffscreenBitmap = Bitmap.createBitmap(width, mBitmapHeight, Bitmap.Config.RGB_565);
+            mOffscreenCanvas = new Canvas(mOffscreenBitmap);
         }
     }
 
