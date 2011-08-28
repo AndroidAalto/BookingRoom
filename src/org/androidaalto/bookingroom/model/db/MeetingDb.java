@@ -92,12 +92,12 @@ public class MeetingDb {
      * @param email
      * @return
      */
-    public Meeting get(int id) {
+    public Meeting get(long last_row_id) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         try {
             Meeting meeting = null;
-            Cursor cursor = db.rawQuery("SELECT * FROM meeting WHERE id == '" + id + "' LIMIT 1", null);
+            Cursor cursor = db.rawQuery("SELECT * FROM meeting WHERE id == '" + last_row_id + "' LIMIT 1", null);
 
             if ( cursor.moveToNext() ) {
                 meeting = new Meeting(cursor);
@@ -127,7 +127,7 @@ public class MeetingDb {
         value.put("user_id", meeting.getUserId());
         value.put("start", meeting.getStart().toString());
         value.put("end", meeting.getEnd().toString());
-        db.insert("meeting", null, value);
-        return meeting;
+        long last_row_id = db.insert("meeting", null, value);
+        return this.get(last_row_id);
     }
 }
