@@ -26,15 +26,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 public class UserDb {
-    
-    private DataBaseHelper dbHelper;
-    
-    public UserDb(DataBaseHelper dbh) { 
-        this.dbHelper = dbh;
-    }  
-    
-    public int returnUserCount() {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+    public static int returnUserCount() {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
+        Log.e("UDB", ""+ db.toString());
         
         try { 
             Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM user", null);
@@ -44,14 +39,14 @@ public class UserDb {
                 i = cursor.getInt(0);
             }
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
             return i;
         } catch (Exception e) {
             Log.e("TEST", "captured exception" + e.toString());
             return 0;
         } finally {
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
         }    
     }
 
@@ -59,8 +54,8 @@ public class UserDb {
      * @param email
      * @return
      */
-    public User get(String email) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+    public static User get(String email) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
 
         try {
             User user = null;
@@ -78,7 +73,7 @@ public class UserDb {
             }
             
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
             
             return user;
         } catch (Exception e) {
@@ -86,7 +81,7 @@ public class UserDb {
             return null;
         } finally {
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
         }
     }
 
@@ -94,13 +89,13 @@ public class UserDb {
      * @param user
      * @return
      */
-    public User store(User user) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+    public static User store(User user) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getWritableDatabase();
         ContentValues value = new ContentValues();
         value.put("Name", user.getName());
         value.put("email", user.getEmail());
         value.put("is_admin", user.is_admin());
         db.insert("user", null, value);
-        return this.get(user.getEmail());
+        return UserDb.get(user.getEmail());
     }
 }

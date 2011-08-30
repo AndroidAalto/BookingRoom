@@ -25,12 +25,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+
 public class DataBaseHelper extends SQLiteOpenHelper {
     private static String TAG = "DataBaseHelper";
 
-    // The Android's default system path of your application database.
-    // private static String DB_PATH =
-    // "/data/data/net.jrcandroid.wordtrainer/databases/";
     private static String DB_NAME = "booking.db";
 
     // Remember to increase whenever you want to call onUpdate
@@ -53,17 +51,14 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                     "salt VARCHAR(50)," +
                     "is_admin BOOLEAN default false)";
 
-    private final Context myContext;
+    private static DataBaseHelper instance;
 
-    /**
-     * Constructor Takes and keeps a reference of the passed context in order to
-     * access to the application assets and resources.
-     * 
-     * @param context
-     */
-    public DataBaseHelper(Context context) {
+    private DataBaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
-        this.myContext = context;
+    }
+    
+    public static DataBaseHelper getInstance() {
+        return instance;
     }
 
     @Override
@@ -103,6 +98,14 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    }
+
+    /**
+     * @return
+     */
+    public static void setContext(Context context) {
+        instance = new DataBaseHelper(context);
+        Log.e("DBH", "instantiated");
     }
 
 }
