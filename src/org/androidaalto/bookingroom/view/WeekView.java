@@ -25,24 +25,34 @@
 package org.androidaalto.bookingroom.view;
 
 import org.androidaalto.bookingroom.R;
+import org.androidaalto.bookingroom.logic.MeetingInfo;
+import org.androidaalto.bookingroom.logic.MeetingManager;
 
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import java.util.Calendar;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WeekView extends View {
+
+    private static final String TAG = WeekView.class.getSimpleName();
 
     static private class DayHeader {
         int cell;
@@ -64,13 +74,18 @@ public class WeekView extends View {
 
     // Pre-allocate these objects and re-use them
     private Rect mRect = new Rect();
+    private RectF mRectF = new RectF();
+    private Paint mPaintBorder = new Paint();
     private Rect mSrcRect = new Rect();
     private Rect mDestRect = new Rect();
     private Paint mPaint = new Paint();
+    private Paint mEventTextPaint = new Paint();
 
     Time mBaseDate;
     private Time mCurrentTime;
     private int mHoursWidth;
+    private int mEventTextAscent;
+    private int mEventTextHeight;
     private String[] mHourStrs = {
             "00", "01", "02", "03", "04", "05",
             "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16",
@@ -94,18 +109,33 @@ public class WeekView extends View {
     private int mFirstDate;
     private int mMonthLength;
 
+    private List<MeetingInfo> mMeetings;
+
+    private MeetingGeometry mMeetingGeometry;
+
     private static float mScale = 0; // Used for supporting different screen
                                      // densities
 
     private static int HOURS_FONT_SIZE = 12;
     private static int NORMAL_FONT_SIZE = 12;
+    private static int EVENT_TEXT_FONT_SIZE = 12;
+    private static int MIN_CELL_WIDTH_FOR_TEXT = 27;
+    private static float MIN_EVENT_HEIGHT = 15.0F; // in pixels
 
+    /* The extra space to leave above the text in normal events */
+    private static final int NORMAL_TEXT_TOP_MARGIN = 2;
     private static final int DAY_GAP = 1;
     private static final int HOUR_GAP = 1;
 
     private static final int HOURS_LEFT_MARGIN = 2;
     private static final int HOURS_RIGHT_MARGIN = 4;
     private static final int HOURS_MARGIN = HOURS_LEFT_MARGIN + HOURS_RIGHT_MARGIN;
+    private static final int MAX_EVENT_TEXT_LEN = 500;
+
+    public static final int MINUTES_PER_HOUR = 60;
+    public static final int MINUTES_PER_DAY = MINUTES_PER_HOUR * 24;
+
+    private static float SMALL_ROUND_RADIUS = 3.0F;
 
     private static int mGridAreaBackgroundColor;
     private static int mHourBackgroundColor;
@@ -116,6 +146,12 @@ public class WeekView extends View {
     private static int mDateBannerTextColor;
     private static int mSaturdayColor;
     private static int mSundayColor;
+    private static int mEventTextColor;
+    private static int mMeetingBackgroundColor;
+
+    private float[] mCharWidths = new float[MAX_EVENT_TEXT_LEN];
+
+    private Pattern drawTextSanitizerFilter = Pattern.compile("[\t\n],");
 
     /**
      * @param context
@@ -149,6 +185,10 @@ public class WeekView extends View {
     private void init() {
         calculateScaleFonts();
 
+        mMeetingGeometry = new MeetingGeometry();
+        mMeetingGeometry.setMinEventHeight(MIN_EVENT_HEIGHT);
+        mMeetingGeometry.setHourGap(HOUR_GAP);
+
         mResources = this.getContext().getResources();
 
         initTimeAndDates();
@@ -158,6 +198,17 @@ public class WeekView extends View {
         initDayStrings();
 
         recalc();
+
+        loadEvents(mBaseDate);
+    }
+
+    /**
+     * 
+     */
+    private void loadEvents(Time initialTime) {
+        Log.d(TAG, "BEGIN: Loading events on " + initialTime.format("%Y-%m-%d %H:%M:%S"));
+        mMeetings = MeetingManager.getMeetings(initialTime, mNumDays);
+        Log.d(TAG, "END: Loading events.");
     }
 
     private void initTimeAndDates() {
@@ -170,7 +221,7 @@ public class WeekView extends View {
         mBaseDate = new Time();
         long millis = System.currentTimeMillis();
         mBaseDate.set(millis);
-        
+
         Paint p = mPaint;
         p.setAntiAlias(true);
         // Figure out how much space we need for the 3-letter names
@@ -210,7 +261,7 @@ public class WeekView extends View {
 
             mDayStrs2Letter[index + 7] = mDayStrs2Letter[index];
         }
-        
+
         Paint p = mPaint;
         p.setAntiAlias(true);
         // Figure out how much space we need for the 3-letter names
@@ -236,6 +287,8 @@ public class WeekView extends View {
         mSaturdayColor = mResources.getColor(R.color.week_saturday);
         mSundayColor = mResources.getColor(R.color.week_sunday);
         mDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
+        mEventTextColor = mResources.getColor(R.color.calendar_event_text_color);
+        mMeetingBackgroundColor = mResources.getColor(R.color.meeting_background_color);
     }
 
     private void calculateScaleFonts() {
@@ -243,7 +296,12 @@ public class WeekView extends View {
             mScale = getContext().getResources().getDisplayMetrics().density;
             if (mScale != 1) {
                 NORMAL_FONT_SIZE *= mScale;
+                EVENT_TEXT_FONT_SIZE *= mScale;
                 HOURS_FONT_SIZE *= mScale;
+                MIN_CELL_WIDTH_FOR_TEXT *= mScale;
+                MIN_EVENT_HEIGHT *= mScale;
+
+                SMALL_ROUND_RADIUS *= mScale;
             }
         }
     }
@@ -262,8 +320,11 @@ public class WeekView extends View {
                     diff += 7;
                 }
                 mBaseDate.monthDay -= diff;
-                mBaseDate.normalize(true /* ignore isDst */);
             }
+            mBaseDate.hour = 0;
+            mBaseDate.minute = 0;
+            mBaseDate.second = 0;
+            mBaseDate.normalize(true /* ignore isDst */);
         }
 
         long start = mBaseDate.normalize(true /* use isDst */);
@@ -453,6 +514,7 @@ public class WeekView extends View {
      * @param canvas
      */
     private void drawFullWeekView(Canvas canvas) {
+        Log.d(TAG, "BEGIN: Drawing full week");
         Paint p = mPaint;
         Rect r = mRect;
         int lineY = mCurrentTime.hour * (mCellHeight + HOUR_GAP)
@@ -462,8 +524,8 @@ public class WeekView extends View {
         drawGridBackground(r, canvas, p);
         drawHours(r, canvas, p);
 
-        // Draw each day
-        drawEachDayEvents(r, canvas, p, lineY);
+        drawWeekMeetings(r, canvas, p, lineY);
+        Log.d(TAG, "END: Drawing full week");
     }
 
     /**
@@ -472,8 +534,176 @@ public class WeekView extends View {
      * @param p
      * @param lineY
      */
-    private void drawEachDayEvents(Rect r, Canvas canvas, Paint p, int lineY) {
-        // TODO: Get events and draw them.
+    private void drawWeekMeetings(Rect r, Canvas canvas, Paint p, int lineY) {
+        int x = mHoursWidth;
+        int deltaX = mCellWidth + DAY_GAP;
+        int currentJulianDay = mFirstJulianDay;
+        for (int day = 0; day < mNumDays; day++, currentJulianDay++) {
+            drawDayMeetings(currentJulianDay, x, HOUR_GAP, canvas, p);
+            x += deltaX;
+        }
+    }
+
+    /**
+     * @param cell
+     * @param x
+     * @param hourGap
+     * @param canvas
+     * @param p
+     */
+    private void drawDayMeetings(int date, int left, int top, Canvas canvas, Paint p) {
+        // Draw meetings right to the hours
+        Paint eventTextPaint = mEventTextPaint;
+        int cellWidth = mCellWidth;
+        int cellHeight = mCellHeight;
+
+        List<MeetingInfo> meetings = mMeetings;
+        MeetingGeometry meetingGeometry = mMeetingGeometry;
+
+        // TODO: Check only the meetings for the given date.
+        for (MeetingInfo meeting : meetings) {
+            if (!meetingGeometry.computeEventRect(date, left, top, cellWidth, meeting)) {
+                continue;
+            }
+
+            RectF rf = drawMeetingRect(meetingGeometry, canvas, p, eventTextPaint);
+            drawMeetingText(meeting, rf, canvas, eventTextPaint, NORMAL_TEXT_TOP_MARGIN);
+        }
+    }
+
+    /**
+     * @param meeting
+     * @param canvas
+     * @param p
+     * @param eventTextPaint
+     * @return
+     */
+    private RectF drawMeetingRect(MeetingGeometry geometry, Canvas canvas, Paint p,
+            Paint eventTextPaint) {
+        int color = mMeetingBackgroundColor;
+
+        // TODO: If this event is selected, then use the selection color
+        p.setColor(color);
+        eventTextPaint.setColor(mEventTextColor);
+
+        RectF rf = mRectF;
+        rf.top = geometry.top;
+        rf.bottom = geometry.bottom;
+        rf.left = geometry.left;
+        rf.right = geometry.right - 1;
+
+        Log.d(TAG, "Drawing meeting from (" + rf.left + ", " + rf.top + ") to (" + rf.right + ", "
+                + rf.bottom + ").");
+
+        canvas.drawRoundRect(rf, SMALL_ROUND_RADIUS, SMALL_ROUND_RADIUS, p);
+
+        // Draw a darker border
+        float[] hsv = new float[3];
+        Color.colorToHSV(p.getColor(), hsv);
+        hsv[1] = 1.0f;
+        hsv[2] *= 0.75f;
+        mPaintBorder.setColor(Color.HSVToColor(hsv));
+        canvas.drawRoundRect(rf, SMALL_ROUND_RADIUS, SMALL_ROUND_RADIUS, mPaintBorder);
+
+        rf.left += 2;
+        rf.right -= 2;
+
+        return rf;
+    }
+
+    /**
+     * @param meeting
+     * @param rf
+     * @param canvas
+     * @param eventTextPaint
+     * @param normalTextTopMargin
+     */
+    private void drawMeetingText(MeetingInfo meeting, RectF rf, Canvas canvas, Paint p,
+            int topMargin) {
+        float width = rf.right - rf.left;
+        float height = rf.bottom - rf.top;
+
+        // Leave one pixel extra space between lines
+        int lineHeight = mEventTextHeight + 1;
+
+        // If the rectangle is too small for text, then return
+        if (width < MIN_CELL_WIDTH_FOR_TEXT || height <= lineHeight) {
+            return;
+        }
+
+        // Truncate the event title to a known (large enough) limit
+        String text = meeting.getTitle();
+
+        text = drawTextSanitizer(text);
+
+        int len = text.length();
+        if (len > MAX_EVENT_TEXT_LEN) {
+            text = text.substring(0, MAX_EVENT_TEXT_LEN);
+            len = MAX_EVENT_TEXT_LEN;
+        }
+
+        // Figure out how much space the event title will take, and create a
+        // String fragment that will fit in the rectangle. Use multiple lines,
+        // if available.
+        p.getTextWidths(text, mCharWidths);
+        String fragment = text;
+        float top = rf.top + mEventTextAscent + topMargin;
+        int start = 0;
+
+        // Leave one pixel extra space at the bottom
+        while (start < len && height >= (lineHeight + 1)) {
+            boolean lastLine = (height < 2 * lineHeight + 1);
+            // Skip leading spaces at the beginning of each line
+            do {
+                char c = text.charAt(start);
+                if (c != ' ')
+                    break;
+                start += 1;
+            } while (start < len);
+
+            float sum = 0;
+            int end = start;
+            for (int ii = start; ii < len; ii++) {
+                char c = text.charAt(ii);
+
+                // If we found the end of a word, then remember the ending
+                // position.
+                if (c == ' ') {
+                    end = ii;
+                }
+                sum += mCharWidths[ii];
+                // If adding this character would exceed the width and this
+                // isn't the last line, then break the line at the previous
+                // word. If there was no previous word, then break this word.
+                if (sum > width) {
+                    if (end > start && !lastLine) {
+                        // There was a previous word on this line.
+                        fragment = text.substring(start, end);
+                        start = end;
+                        break;
+                    }
+
+                    // This is the only word and it is too long to fit on
+                    // the line (or this is the last line), so take as many
+                    // characters of this word as will fit.
+                    fragment = text.substring(start, ii);
+                    start = ii;
+                    break;
+                }
+            }
+
+            // If sum <= width, then we can fit the rest of the text on
+            // this line.
+            if (sum <= width) {
+                fragment = text.substring(start, len);
+                start = len;
+            }
+
+            canvas.drawText(fragment, rf.left + 1, top, p);
+
+            top += lineHeight;
+            height -= lineHeight;
+        }
     }
 
     /**
@@ -545,6 +775,7 @@ public class WeekView extends View {
         float deltaX = mCellWidth + DAY_GAP;
         float x = mHoursWidth + mCellWidth;
         for (int day = 0; day < mNumDays; day++) {
+            Log.d(TAG, "Drawing day " + day + " line at: " + x);
             canvas.drawLine(x, startY, x, stopY, p);
             x += deltaX;
         }
@@ -560,6 +791,7 @@ public class WeekView extends View {
         float y = 0;
         float deltaY = mCellHeight + HOUR_GAP;
         for (int hour = 0; hour <= 24; hour++) {
+            Log.d(TAG, "Drawing hour " + hour + " line at: " + y);
             canvas.drawLine(startX, y, stopX, y, p);
             y += deltaY;
         }
@@ -583,7 +815,9 @@ public class WeekView extends View {
         mCellHeight = (mGridAreaHeight - ((mNumHours + 1) * HOUR_GAP)) / mNumHours;
         int usedGridAreaHeight = (mCellHeight + HOUR_GAP) * mNumHours + HOUR_GAP;
         int bottomSpace = mGridAreaHeight - usedGridAreaHeight;
-        // mEventGeometry.setHourHeight(mCellHeight);
+        mMeetingGeometry.setHourHeight(mCellHeight);
+
+        mFirstCell = mBannerPlusMargin;
 
         createOffscreenBitmapAndCanvas(width, bottomSpace);
     }
@@ -620,6 +854,22 @@ public class WeekView extends View {
         } else {
             mBannerPlusMargin = 0;
         }
+
+        p.setTextSize(EVENT_TEXT_FONT_SIZE);
+        float ascent = -p.ascent();
+        mEventTextAscent = (int) Math.ceil(ascent);
+        float totalHeight = ascent + p.descent();
+        mEventTextHeight = (int) Math.ceil(totalHeight);
+
         remeasure(width, height);
+    }
+
+    // Sanitize a string before passing it to drawText or else we get little
+    // squares. For newlines and tabs before a comma, delete the character.
+    // Otherwise, just replace them with a space.
+    private String drawTextSanitizer(String string) {
+        Matcher m = drawTextSanitizerFilter.matcher(string);
+        string = m.replaceAll(",").replace('\n', ' ').replace('\n', ' ');
+        return string;
     }
 }
