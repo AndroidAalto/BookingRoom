@@ -29,13 +29,13 @@ public class User {
     private final String email;
     private final String password;
     private final int salt;
-    private final Boolean admin;
+    private final boolean admin;
 
     public User(String name, String email) {
         this(null, name, email, null, -1, false);
     }
 
-    public User(Integer id, String name, String email, String password, int salt, Boolean admin) {
+    public User(Integer id, String name, String email, String password, int salt, boolean admin) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -64,7 +64,7 @@ public class User {
         return salt;
     }
     
-    public Boolean is_admin() {
+    public boolean isAdmin() {
         return admin;
     }
 }
