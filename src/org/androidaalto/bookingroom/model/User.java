@@ -19,7 +19,6 @@
 
 package org.androidaalto.bookingroom.model;
 
-import android.database.Cursor;
 
 /**
  * @author hannu
