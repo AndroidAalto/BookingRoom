@@ -33,21 +33,19 @@ import java.util.List;
  * @author hannu
  */
 public class MeetingManager {
-    private static MeetingDb meetingDb;
-    private static UserDb userDb;
-
     public static MeetingInfo book(MeetingInfo meetingInfo) {
         // TODO
         // if (meetingInfo.getStart().before(new Date()))
         // throw new IllegalArgumentException("Invalid starting time");
 
-        if (!meetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
+        if (!MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
             throw new IllegalArgumentException("Clashing meeting");
-        User user = userDb.get(meetingInfo.getUser().getEmail());
+
+        User user = UserDb.get(meetingInfo.getUser().getEmail());
         if (user == null)
-            user = userDb.store(new User(meetingInfo.getUser().getName(), meetingInfo.getUser()
+            user = UserDb.store(new User(meetingInfo.getUser().getName(), meetingInfo.getUser()
                     .getEmail()));
-        final Meeting meeting = meetingDb.store(new Meeting(
+        final Meeting meeting = MeetingDb.store(new Meeting(
                 user.getId(),
                 meetingInfo.getTitle(),
                 meetingInfo.getStart(),
@@ -58,8 +56,8 @@ public class MeetingManager {
     public static List<MeetingInfo> getMeetings(Time from, int offsetDays) {
         Time end = new Time();
         end.set(from.toMillis(true) + ((long) offsetDays) * 86400000L);
-
-        List<Meeting> meetings = meetingDb.getMeetings(from, end);
+        
+        List<Meeting> meetings = MeetingDb.getMeetings(from, end);
         List<MeetingInfo> meetingInfos = new ArrayList<MeetingInfo>();
         for (Meeting meeting : meetings) {
             meetingInfos.add(new MeetingInfo(null, meeting.getStart(), meeting.getEnd(), meeting
