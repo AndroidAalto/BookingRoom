@@ -24,12 +24,9 @@ import org.androidaalto.bookingroom.model.User;
 import org.androidaalto.bookingroom.model.db.MeetingDb;
 import org.androidaalto.bookingroom.model.db.UserDb;
 
-import android.text.format.DateUtils;
 import android.text.format.Time;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,32 +35,30 @@ import java.util.List;
 public class MeetingManager {
     private static MeetingDb meetingDb;
     private static UserDb userDb;
-    
+
     public static MeetingInfo book(MeetingInfo meetingInfo) {
         // TODO
-        //if (meetingInfo.getStart().before(new Date()))
-        //    throw new IllegalArgumentException("Invalid starting time");
+        // if (meetingInfo.getStart().before(new Date()))
+        // throw new IllegalArgumentException("Invalid starting time");
 
         if (!meetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
             throw new IllegalArgumentException("Clashing meeting");
-        final User user = userDb.get(meetingInfo.getUser().getEmail());
-        final User newUser = userDb.store(new User(
-                meetingInfo.getUser().getName(), meetingInfo.getUser().getEmail()));
+        User user = userDb.get(meetingInfo.getUser().getEmail());
+        if (user == null)
+            user = userDb.store(new User(meetingInfo.getUser().getName(), meetingInfo.getUser()
+                    .getEmail()));
         final Meeting meeting = meetingDb.store(new Meeting(
-                user != null ? user.getId() : newUser.getId(),
+                user.getId(),
                 meetingInfo.getTitle(),
                 meetingInfo.getStart(),
                 meetingInfo.getEnd()));
-
-        // TODO store meeting
         return new MeetingInfo(null, meeting.getStart(), meeting.getEnd(), meeting.getTitle());
     }
-
 
     public static List<MeetingInfo> getMeetings(Time from, int offsetDays) {
         Time end = new Time();
         end.set(from.toMillis(true) + ((long) offsetDays) * 86400000L);
-        
+
         List<Meeting> meetings = meetingDb.getMeetings(from, end);
         List<MeetingInfo> meetingInfos = new ArrayList<MeetingInfo>();
         for (Meeting meeting : meetings) {

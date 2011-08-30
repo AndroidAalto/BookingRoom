@@ -99,7 +99,7 @@ public class UserDb {
         ContentValues value = new ContentValues();
         value.put("Name", user.getName());
         value.put("email", user.getEmail());
-        value.put("is_admin", user.is_admin());
+        value.put("is_admin", user.isAdmin());
         db.insert("user", null, value);
         return this.get(user.getEmail());
     }

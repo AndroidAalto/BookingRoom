@@ -21,10 +21,6 @@ package org.androidaalto.bookingroom.logic;
 
 import android.text.format.Time;
 
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
 /**
  * @author hannu
  */
