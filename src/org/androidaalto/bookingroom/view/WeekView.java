@@ -817,6 +817,8 @@ public class WeekView extends View {
         int bottomSpace = mGridAreaHeight - usedGridAreaHeight;
         mMeetingGeometry.setHourHeight(mCellHeight);
 
+        mFirstCell = mBannerPlusMargin;
+
         createOffscreenBitmapAndCanvas(width, bottomSpace);
     }
 
