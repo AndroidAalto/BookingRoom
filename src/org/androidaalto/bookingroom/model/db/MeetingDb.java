@@ -37,7 +37,7 @@ public class MeetingDb {
         try {
             Cursor cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE start > '?' AND end < '?'",
+                            "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE start > ? AND end < ?",
                             new String[] {
                                     "" + from.toMillis(false) / 1000,
                                     "" + to.toMillis(false) / 1000
@@ -92,7 +92,7 @@ public class MeetingDb {
         try {
             Cursor cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE id == '?' LIMIT 1",
+                            "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE id == ? LIMIT 1",
                             new String[] {
                                 "" + id
                             });

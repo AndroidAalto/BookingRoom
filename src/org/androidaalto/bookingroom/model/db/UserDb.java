@@ -50,7 +50,7 @@ public class UserDb {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
 
         try {
-            Cursor cursor = db.rawQuery("SELECT * FROM user WHERE email == '?' LIMIT 1",
+            Cursor cursor = db.rawQuery("SELECT * FROM user WHERE email == ? LIMIT 1",
                     new String[] {
                         email
                     });
