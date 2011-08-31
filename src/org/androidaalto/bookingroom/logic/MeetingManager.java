@@ -27,7 +27,6 @@ import org.androidaalto.bookingroom.model.db.UserDb;
 import android.text.format.Time;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,7 +37,7 @@ public class MeetingManager {
     private static final long MAX_LENGTH_IN_MILLIS = 720000;
 
     public static MeetingInfo book(MeetingInfo meetingInfo) {
-        final long nowMillis = new Date().getTime();
+        final long nowMillis = System.currentTimeMillis();
         final Time now = new Time();
         now.set(nowMillis);
         if (meetingInfo.getStart().before(now))
