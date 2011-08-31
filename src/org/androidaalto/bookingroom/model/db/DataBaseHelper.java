@@ -25,11 +25,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-
 public class DataBaseHelper extends SQLiteOpenHelper {
-    private static String TAG = "DataBaseHelper";
+    private static final String TAG = "DataBaseHelper";
 
-    private static String DB_NAME = "booking.db";
+    private static final String DB_NAME = "booking.db";
 
     // Remember to increase whenever you want to call onUpdate
     private static final int DB_VERSION = 1;
@@ -56,27 +55,29 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     private DataBaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
-    
+
     public static DataBaseHelper getInstance() {
+        if (instance == null)
+            throw new IllegalStateException("Instance has not been instantiated");
         return instance;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.d("DBHELPER", "going to create tables");
+        Log.d(TAG, "going to create tables");
         db.execSQL(CREATE_MEETING_SQL);
         db.execSQL(CREATE_USER_SQL);
-        
+
         // Dummy values
         ContentValues value = new ContentValues();
         value.put("id", 1);
         value.put("name", "Test");
-        value.put("email","test@test.com");
-        //value.put("password", "test");
-        //value.put("salt", "test");
+        value.put("email", "test@test.com");
+        // value.put("password", "test");
+        // value.put("salt", "test");
         value.put("is_admin", false);
-        db.insert("user",null,value);
-        
+        db.insert("user", null, value);
+
         value = new ContentValues();
         value.put("id", 1);
         value.put("user_id", 1);
@@ -84,15 +85,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         value.put("start", "1314519236000"); // Sun, 28 Aug 2011 08:13:56 GMT
         value.put("end", "1314522836000"); // Sun, 28 Aug 2011 09:13:56 GMT
         db.insert("meeting", null, value);
-        
+
         value = new ContentValues();
         value.put("id", 2);
         value.put("user_id", 1);
         value.put("title", "Another Meeting");
-        value.put("start", "1314608400000"); //Mon, 29 Aug 2011 09:00:00 GMT 
+        value.put("start", "1314608400000"); // Mon, 29 Aug 2011 09:00:00 GMT
         value.put("end", "1314615600000"); // Mon, 29 Aug 2011 11:00:00 GMT
         db.insert("meeting", null, value);
-        
+
         Log.d("DBHELPER", "tables created");
     }
 
@@ -104,9 +105,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * @return
      */
     public static void setContext(Context context) {
+        if (instance != null)
+            throw new IllegalStateException("Instance has already been instantiated");
         instance = new DataBaseHelper(context);
-        Log.e("DBH", "instantiated");
+        Log.d(TAG, "instantiated");
     }
-
 }
-

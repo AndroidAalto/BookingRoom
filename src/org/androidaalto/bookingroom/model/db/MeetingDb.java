@@ -16,6 +16,7 @@
    You should have received a copy of the GNU General Public License
    along with BookingRoom. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.androidaalto.bookingroom.model.db;
 
 import org.androidaalto.bookingroom.model.Meeting;
@@ -24,111 +25,91 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.format.Time;
-import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MeetingDb {
-        
-    public static ArrayList<Meeting> getMeetings(Time start, Time end) {
-        
+    public static List<Meeting> getMeetings(Time from, Time to) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
         ArrayList<Meeting> records = new ArrayList<Meeting>();
-        
-        try { 
-            Log.e("TEST", "Hello");
-            Log.e("TEST", ""+ start);
-            Log.e("TEST", ""+ start.toMillis(true));
-            Log.e("TEST", ""+ end.toMillis(true));
-            
-            Cursor cursor = db.rawQuery("SELECT * FROM meeting WHERE start > '" + start.toMillis(true) + "' AND end < '" + end.toMillis(true) + "'", null);
 
-            while ( cursor.moveToNext() ) {
-                Log.e("MeetingDB", "creating meeting object");
-                
-                Time startT = new Time();
-                startT.set(cursor.getLong(3));
-                Time endT = new Time();
-                endT.set(cursor.getLong(4));
-                
-                
+        try {
+            Cursor cursor = db
+                    .rawQuery(
+                            "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE start > '?' AND end < '?'",
+                            new String[] {
+                                    "" + from.toMillis(false) / 1000,
+                                    "" + to.toMillis(false) / 1000
+                            });
+
+            while (cursor.moveToNext()) {
+                Time startTime = new Time();
+                startTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("start_time")));
+                Time endTime = new Time();
+                endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end_time")));
+
                 Meeting m = new Meeting(
-                        cursor.getInt(0),
-                        cursor.getInt(1),
-                        cursor.getString(2),
-                        startT,
-                        endT
-                );
+                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("title")),
+                        startTime,
+                        endTime
+                        );
                 records.add(m);
             }
-            
-            db.close();
-            DataBaseHelper.getInstance().close();
+
             return records;
-        } catch (Exception e) {
-            Log.e("TEST", "captured exception" + e.toString());
-            return null;
         } finally {
             db.close();
             DataBaseHelper.getInstance().close();
-        }        
+        }
     }
-    
-    public static int returnMeetingCount() {
-        SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
-        
-        try { 
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM meeting", null);
 
-            int i = 0;
-            while ( cursor.moveToNext() ) {
-                i = cursor.getInt(0);
+    public static int getMeetingCount() {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
+
+        try {
+            Cursor cursor = db.rawQuery("SELECT COUNT(*) AS count FROM meeting", null);
+
+            if (cursor.moveToNext()) {
+                return cursor.getInt(cursor.getColumnIndexOrThrow("count"));
             }
-            
-            db.close();
-            DataBaseHelper.getInstance().close();
-            return i;
-        } catch (Exception e) {
-            Log.e("TEST", "captured exception" + e.toString());
             return 0;
         } finally {
             db.close();
             DataBaseHelper.getInstance().close();
-        }    
+        }
     }
-    
+
     /**
      * @param email
      * @return
      */
-    public static Meeting get(long last_row_id) {
+    public static Meeting get(long id) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
 
         try {
-            Meeting meeting = null;
-            Cursor cursor = db.rawQuery("SELECT * FROM meeting WHERE id == '" + last_row_id + "' LIMIT 1", null);
+            Cursor cursor = db
+                    .rawQuery(
+                            "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE id == '?' LIMIT 1",
+                            new String[] {
+                                "" + id
+                            });
 
-            if ( cursor.moveToNext() ) {
-                Time startT = new Time();
-                startT.set(cursor.getLong(3));
-                Time endT = new Time();
-                endT.set(cursor.getLong(4));
-                
-                meeting = new Meeting(
-                        cursor.getInt(0),
-                        cursor.getInt(1),
-                        cursor.getString(2),
-                        startT,
-                        endT
-                );
+            if (cursor.moveToNext()) {
+                Time startTime = new Time();
+                startTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("start_time")));
+                Time endTime = new Time();
+                endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end_time")));
+
+                return new Meeting(
+                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("title")),
+                        startTime,
+                        endTime);
             }
-            
-            db.close();
-            DataBaseHelper.getInstance().close();
-            
-            return meeting;
-        } catch (Exception e) {
-            Log.e("TEST", "captured exception" + e.toString());
             return null;
         } finally {
             db.close();
@@ -145,9 +126,9 @@ public class MeetingDb {
         ContentValues value = new ContentValues();
         value.put("title", meeting.getTitle());
         value.put("user_id", meeting.getUserId());
-        value.put("start", meeting.getStart().toString());
-        value.put("end", meeting.getEnd().toString());
-        long last_row_id = db.insert("meeting", null, value);
-        return MeetingDb.get(last_row_id);
+        value.put("start", meeting.getStart().toMillis(false) / 1000);
+        value.put("end", meeting.getEnd().toMillis(false) / 1000);
+        final long id = db.insert("meeting", null, value);
+        return MeetingDb.get(id);
     }
 }
