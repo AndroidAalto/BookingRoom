@@ -27,17 +27,32 @@ import org.androidaalto.bookingroom.model.db.UserDb;
 import android.text.format.Time;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
  * @author hannu
  */
 public class MeetingManager {
-    public static MeetingInfo book(MeetingInfo meetingInfo) {
-        // TODO
-        // if (meetingInfo.getStart().before(new Date()))
-        // throw new IllegalArgumentException("Invalid starting time");
+    private static final long MAX_START_TIME_INCREASE_IN_MILLIS = 120960000;
+    private static final long MAX_LENGTH_IN_MILLIS = 720000;
 
+    public static MeetingInfo book(MeetingInfo meetingInfo) {
+        final long nowMillis = new Date().getTime();
+        final Time now = new Time();
+        now.set(nowMillis);
+        if (meetingInfo.getStart().before(now))
+            throw new IllegalArgumentException("Starting time in past");
+        if (!meetingInfo.getStart().before(meetingInfo.getEnd()))
+            throw new IllegalArgumentException("Starting time not before ending time");
+        final Time maximumStartingTime = new Time();
+        maximumStartingTime.set(nowMillis + MAX_START_TIME_INCREASE_IN_MILLIS);
+        if (meetingInfo.getStart().after(maximumStartingTime))
+            throw new IllegalArgumentException("Starting time too far ahead in the future");
+        final Time maximumEndingTime = new Time();
+        maximumEndingTime.set(meetingInfo.getStart().toMillis(false) + MAX_LENGTH_IN_MILLIS);
+        if (meetingInfo.getEnd().after(maximumEndingTime))
+            throw new IllegalArgumentException("Too long of a meeting");
         if (!MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
             throw new IllegalArgumentException("Clashing meeting");
 
@@ -56,7 +71,7 @@ public class MeetingManager {
     public static List<MeetingInfo> getMeetings(Time from, int offsetDays) {
         Time end = new Time();
         end.set(from.toMillis(true) + ((long) offsetDays) * 86400000L);
-        
+
         List<Meeting> meetings = MeetingDb.getMeetings(from, end);
         List<MeetingInfo> meetingInfos = new ArrayList<MeetingInfo>();
         for (Meeting meeting : meetings) {
