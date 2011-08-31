@@ -30,46 +30,31 @@ import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
 
 public class MainActivity extends Activity {
-    DataBaseHelper myDbHelper = null;
-    UserDb userDB;
-    MeetingDb meetingDB;
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        DataBaseHelper.setContext(this.getBaseContext());
         setContentView(R.layout.main);
     }
     
     @Override
     public void onPause() {
         super.onPause();
-
-        if ( myDbHelper != null ) {
-            myDbHelper.close();
-        }
-        userDB = null;
-        meetingDB = null;
+        DataBaseHelper.getInstance().close();
     }
     
     @Override
     public void onResume() {
         super.onResume();
-        // Copy the database when the application is launched for the first time
-        myDbHelper = new DataBaseHelper(this);
-        userDB = new UserDb(myDbHelper);
-        meetingDB = new MeetingDb(myDbHelper);
-
-        Log.e("DBW", ""+userDB.returnUserCount());
-        Log.e("DBW", ""+meetingDB.returnMeetingCount());
-        User myUser = userDB.get("test@test.com");
+        
+        Log.e("DBW", ""+UserDb.returnUserCount());
+        Log.e("DBW", ""+MeetingDb.returnMeetingCount());
+        User myUser = UserDb.get("test@test.com");
         Log.e("DBW", ""+ myUser.getName());
         
         ArrayList<Meeting> myMeetings = null;
@@ -79,7 +64,7 @@ public class MainActivity extends Activity {
         Time end = new Time();
         end.set(30, 8 - 1, 2011); // 0-11 !!
         
-        myMeetings = meetingDB.getMeetings(start, end) ;
+        myMeetings = MeetingDb.getMeetings(start, end) ;
         
         if ( myMeetings.size() > 0 ) {
             for ( Meeting m : myMeetings) {

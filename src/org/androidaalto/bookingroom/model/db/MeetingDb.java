@@ -26,19 +26,13 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.format.Time;
 import android.util.Log;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class MeetingDb {
-    private DataBaseHelper dbHelper;
-    
-    public MeetingDb(DataBaseHelper dbh) { 
-        this.dbHelper = dbh;
-    }  
-    
-    public ArrayList<Meeting> getMeetings(Time start, Time end) {
         
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+    public static ArrayList<Meeting> getMeetings(Time start, Time end) {
+        
+        SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
         ArrayList<Meeting> records = new ArrayList<Meeting>();
         
         try { 
@@ -69,19 +63,19 @@ public class MeetingDb {
             }
             
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
             return records;
         } catch (Exception e) {
             Log.e("TEST", "captured exception" + e.toString());
             return null;
         } finally {
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
         }        
     }
     
-    public int returnMeetingCount() {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+    public static int returnMeetingCount() {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
         
         try { 
             Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM meeting", null);
@@ -92,14 +86,14 @@ public class MeetingDb {
             }
             
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
             return i;
         } catch (Exception e) {
             Log.e("TEST", "captured exception" + e.toString());
             return 0;
         } finally {
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
         }    
     }
     
@@ -107,8 +101,8 @@ public class MeetingDb {
      * @param email
      * @return
      */
-    public Meeting get(long last_row_id) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+    public static Meeting get(long last_row_id) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
 
         try {
             Meeting meeting = null;
@@ -130,7 +124,7 @@ public class MeetingDb {
             }
             
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
             
             return meeting;
         } catch (Exception e) {
@@ -138,7 +132,7 @@ public class MeetingDb {
             return null;
         } finally {
             db.close();
-            dbHelper.close();
+            DataBaseHelper.getInstance().close();
         }
     }
 
@@ -146,14 +140,14 @@ public class MeetingDb {
      * @param meeting
      * @return
      */
-    public Meeting store(Meeting meeting) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+    public static Meeting store(Meeting meeting) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getWritableDatabase();
         ContentValues value = new ContentValues();
         value.put("title", meeting.getTitle());
         value.put("user_id", meeting.getUserId());
         value.put("start", meeting.getStart().toString());
         value.put("end", meeting.getEnd().toString());
         long last_row_id = db.insert("meeting", null, value);
-        return this.get(last_row_id);
+        return MeetingDb.get(last_row_id);
     }
 }
