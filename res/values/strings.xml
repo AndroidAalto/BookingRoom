@@ -4,4 +4,25 @@
     <string name="app_name">BookingRoom</string>
     <!-- Order of weekday/day label in week view -->
     <string name="weekday_day">%1$s %2$s</string>
+    
+    
+    
+    <!--  Add meeting -->
+    <string name="meetingHeaderText"><u>Meeting</u></string>
+    <string name="meetingLabelText">Title</string>
+    
+    <string name="scheduleHeaderText"><u>Schedule</u></string>
+    <string name="scheduleStartLabel">Start</string>
+    <string name="scheduleEndLabel">Start</string>
+    
+    <string name="contactHeaderText"><u>Your contact details</u></string>
+    <string name="contactNameLabel">Name</string>
+    <string name="contactEmailLabel">Email</string>
+    
+    <string name="buttonOK">OK</string>
+    <string name="buttonCancel">Cancel</string>
+    
+    <string name="hintTitle">Describe your meeting</string>
+    <string name="hintName">Your name</string>
+    <string name="hintEmail">Your email address</string>
 </resources>
