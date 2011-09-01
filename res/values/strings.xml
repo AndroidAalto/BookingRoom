@@ -13,7 +13,7 @@
     
     <string name="scheduleHeaderText"><u>Schedule</u></string>
     <string name="scheduleStartLabel">Start</string>
-    <string name="scheduleEndLabel">Start</string>
+    <string name="scheduleEndLabel">End</string>
     
     <string name="contactHeaderText"><u>Your contact details</u></string>
     <string name="contactNameLabel">Name</string>

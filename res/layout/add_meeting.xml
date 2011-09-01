@@ -56,8 +56,8 @@
         </TextView>
  
         <TextView
-            style="@style/normalText"
-            android:layout_width="wrap_content"
+            style="@style/timerText"
+            android:layout_width="100dip"
             android:layout_height="wrap_content"
             android:layout_below="@+id/scheduleHeader"
             android:text="@string/scheduleStartLabel"
@@ -68,14 +68,15 @@
         <TimePicker
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingRight="100dip"
             android:layout_toRightOf="@+id/startLabel"
             android:layout_below="@+id/scheduleHeader"
             android:id="@+id/startPicker">
         </TimePicker>
 
         <TextView
-            style="@style/normalText"
-            android:layout_width="wrap_content"
+            style="@style/timerText"
+            android:layout_width="100dip"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/startPicker"
             android:layout_below="@+id/scheduleHeader"
@@ -129,6 +130,7 @@
             style="@style/normalText"
             android:layout_width="100dip"
             android:layout_height="wrap_content"
+            android:paddingLeft="20dip"
             android:layout_below="@+id/contactHeader"
             android:layout_toRightOf="@+id/nameEdit"
             android:text="@string/contactEmailLabel"
@@ -152,6 +154,7 @@
         android:layout_width="fill_parent"
         android:gravity="center_vertical|center_horizontal" 
         android:layout_height="wrap_content"
+        android:layout_marginTop="30dip"
         android:id="@+id/buttonsComponent">
 
         <Button

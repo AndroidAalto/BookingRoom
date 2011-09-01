@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="header" parent="@android:style/Widget.TextView">
-        <item name="android:textColor">#00FF00</item>
+        <item name="android:textColor">#FFFFFF</item>
         <item name="android:textSize">36dp</item>
         <item name="android:paddingBottom">15dip</item>
     </style>
@@ -12,8 +12,18 @@
         <item name="android:paddingRight">20dip</item>
     </style>
     
+    <style name="timerText" parent="@android:style/Widget.TextView">
+        <item name="android:textColor">#00FF00</item>
+        <item name="android:textSize">24dp</item>
+        <item name="android:paddingRight">20dip</item>
+        <item name="android:paddingTop">45dip</item>
+    </style>
+    
     <style name="sButton" parent="@android:style/Widget.Button">
+        <item name="android:width">200dip</item>
         <item name="android:textSize">28dp</item>
+        <item name="android:padding">15dip</item>
+        <item name="android:layout_marginRight">25dip</item>
     </style>
     
     <style name="sEdit" parent="@android:style/Widget.EditText">
