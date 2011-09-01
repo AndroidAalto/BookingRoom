@@ -35,6 +35,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.graphics.Path;
+import android.graphics.Path.Direction;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -43,10 +45,16 @@ import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -80,6 +88,8 @@ public class WeekView extends View {
     private Rect mDestRect = new Rect();
     private Paint mPaint = new Paint();
     private Paint mEventTextPaint = new Paint();
+    private Path mPath = new Path();
+    private Paint mSelectionPaint = new Paint();
 
     Time mBaseDate;
     private Time mCurrentTime;
@@ -98,8 +108,11 @@ public class WeekView extends View {
     private int mViewHeight;
     private int mCellWidth;
     private int mNumDays = 7;
+    private int mViewStartX;
     private int mViewStartY;
     private int mFirstCell;
+    private int mFirstHour = -1;
+    private int mFirstHourOffset;
     private int mHoursTextHeight;
     private int mBannerPlusMargin;
     private int mFirstJulianDay;
@@ -111,7 +124,17 @@ public class WeekView extends View {
 
     private List<MeetingInfo> mMeetings;
 
-    private MeetingGeometry mMeetingGeometry;
+    /**
+     * Selected Julian day
+     */
+    private int mSelectionDay;
+    private int mSelectionHour;
+    private ArrayList<MeetingGeometry> mSelectedMeetings = new ArrayList<MeetingGeometry>();
+    private boolean mComputeSelectedMeeting;
+    private MeetingInfo mSelectedMeetingInfo;
+    private MeetingGeometry mSelectedMeetingGeometry;
+
+    // private MeetingGeometry mMeetingGeometry;
 
     private static float mScale = 0; // Used for supporting different screen
                                      // densities
@@ -121,6 +144,42 @@ public class WeekView extends View {
     private static int EVENT_TEXT_FONT_SIZE = 12;
     private static int MIN_CELL_WIDTH_FOR_TEXT = 27;
     private static float MIN_EVENT_HEIGHT = 15.0F; // in pixels
+    private static float SMALL_ROUND_RADIUS = 3.0F;
+
+    /**
+     * The initial state of the touch mode when we enter this view.
+     */
+    private static final int TOUCH_MODE_INITIAL_STATE = 0;
+
+    /**
+     * Indicates we just received the touch event and we are waiting to see if
+     * it is a tap or a scroll gesture.
+     */
+    private static final int TOUCH_MODE_DOWN = 1;
+
+    /**
+     * Indicates the touch gesture is a vertical scroll
+     */
+    private static final int TOUCH_MODE_VSCROLL = 0x20;
+
+    /**
+     * Indicates the touch gesture is a horizontal scroll
+     */
+    private static final int TOUCH_MODE_HSCROLL = 0x40;
+
+    private int mTouchMode = TOUCH_MODE_INITIAL_STATE;
+
+    /**
+     * The selection modes are HIDDEN, PRESSED, SELECTED, and LONGPRESS.
+     */
+    private static final int SELECTION_HIDDEN = 0;
+    private static final int SELECTION_PRESSED = 1;
+    private static final int SELECTION_SELECTED = 2;
+    private static final int SELECTION_LONGPRESS = 3;
+
+    private int mSelectionMode = SELECTION_HIDDEN;
+
+    private static int HORIZONTAL_SCROLL_THRESHOLD = 50;
 
     /* The extra space to leave above the text in normal events */
     private static final int NORMAL_TEXT_TOP_MARGIN = 2;
@@ -135,9 +194,8 @@ public class WeekView extends View {
     public static final int MINUTES_PER_HOUR = 60;
     public static final int MINUTES_PER_DAY = MINUTES_PER_HOUR * 24;
 
-    private static float SMALL_ROUND_RADIUS = 3.0F;
-
     private static int mGridAreaBackgroundColor;
+    private static int mGridAreaSelectedColor;
     private static int mHourBackgroundColor;
     private static int mHourLabelColor;
     private static int mGridLineHorizontalColor;
@@ -148,17 +206,27 @@ public class WeekView extends View {
     private static int mSundayColor;
     private static int mEventTextColor;
     private static int mMeetingBackgroundColor;
+    private static int mHourSelectedColor;
+    private static int mCalendarDateSelected;
 
     private float[] mCharWidths = new float[MAX_EVENT_TEXT_LEN];
 
     private Pattern drawTextSanitizerFilter = Pattern.compile("[\t\n],");
+
+    private GestureDetector mGestureDetector;
+
+    private boolean mOnFlingCalled;
+
+    private boolean mScrolling;
+
+    private Map<MeetingGeometry, MeetingInfo> mMeetingsGeometryInfoMap = new HashMap<MeetingGeometry, MeetingInfo>();
 
     /**
      * @param context
      */
     public WeekView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     /**
@@ -176,20 +244,23 @@ public class WeekView extends View {
      */
     public WeekView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init();
+        init(context);
     }
 
     /**
      * Initializes all the parameters needed to draw this view.
+     * 
+     * @param context
      */
-    private void init() {
+    private void init(Context context) {
         calculateScaleFonts();
 
-        mMeetingGeometry = new MeetingGeometry();
-        mMeetingGeometry.setMinEventHeight(MIN_EVENT_HEIGHT);
-        mMeetingGeometry.setHourGap(HOUR_GAP);
+        MeetingGeometry.setMinEventHeight(MIN_EVENT_HEIGHT);
+        MeetingGeometry.setHourGap(HOUR_GAP);
 
         mResources = this.getContext().getResources();
+
+        mGestureDetector = new GestureDetector(context, new GestureListener(this));
 
         initTimeAndDates();
 
@@ -199,15 +270,19 @@ public class WeekView extends View {
 
         recalc();
 
-        loadEvents(mBaseDate);
+        loadMeetings(mBaseDate);
     }
 
     /**
      * 
      */
-    private void loadEvents(Time initialTime) {
+    private void loadMeetings(Time initialTime) {
         Log.d(TAG, "BEGIN: Loading events on " + initialTime.format("%Y-%m-%d %H:%M:%S"));
         mMeetings = MeetingManager.getMeetings(initialTime, mNumDays);
+        mMeetingsGeometryInfoMap = new HashMap<MeetingGeometry, MeetingInfo>();
+        for (MeetingInfo meetingInfo : mMeetings) {
+            mMeetingsGeometryInfoMap.put(new MeetingGeometry(), meetingInfo);
+        }
         Log.d(TAG, "END: Loading events.");
     }
 
@@ -289,6 +364,9 @@ public class WeekView extends View {
         mDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
         mEventTextColor = mResources.getColor(R.color.calendar_event_text_color);
         mMeetingBackgroundColor = mResources.getColor(R.color.meeting_background_color);
+        mHourSelectedColor = mResources.getColor(R.color.calendar_hour_selected);
+        mGridAreaSelectedColor = mResources.getColor(R.color.calendar_grid_area_selected);
+        mCalendarDateSelected = mResources.getColor(R.color.calendar_date_selected);
     }
 
     private void calculateScaleFonts() {
@@ -395,7 +473,19 @@ public class WeekView extends View {
     private void drawDayHeaderLoop(Rect r, Canvas canvas, Paint p) {
         clearDayBannerBackground(r, canvas, p);
 
-        // TODO: Draw a highlight on the selected day (if any)
+     // Draw a highlight on the selected day (if any), but only if we are
+        // displaying more than one day.
+        if (mSelectionMode != SELECTION_HIDDEN) {
+            if (mNumDays > 1) {
+                p.setColor(mCalendarDateSelected);
+                r.top = 0;
+                r.bottom = mBannerPlusMargin;
+                int daynum = mSelectionDay - mFirstJulianDay;
+                r.left = mHoursWidth + daynum * (mCellWidth + DAY_GAP);
+                r.right = r.left + mCellWidth;
+                canvas.drawRect(r, p);
+            }
+        }
 
         p.setTextSize(NORMAL_FONT_SIZE);
         p.setTextAlign(Paint.Align.CENTER);
@@ -557,16 +647,15 @@ public class WeekView extends View {
         int cellWidth = mCellWidth;
         int cellHeight = mCellHeight;
 
-        List<MeetingInfo> meetings = mMeetings;
-        MeetingGeometry meetingGeometry = mMeetingGeometry;
-
         // TODO: Check only the meetings for the given date.
-        for (MeetingInfo meeting : meetings) {
-            if (!meetingGeometry.computeEventRect(date, left, top, cellWidth, meeting)) {
+        for (MeetingGeometry geometry : mMeetingsGeometryInfoMap.keySet()) {
+            MeetingInfo meeting = mMeetingsGeometryInfoMap.get(geometry);
+            if (!geometry.computeEventRect(date, left, top, cellWidth, meeting)) {
                 continue;
             }
 
-            RectF rf = drawMeetingRect(meetingGeometry, canvas, p, eventTextPaint);
+            mMeetingsGeometryInfoMap.put(geometry, meeting);
+            RectF rf = drawMeetingRect(geometry, canvas, p, eventTextPaint);
             drawMeetingText(meeting, rf, canvas, eventTextPaint, NORMAL_TEXT_TOP_MARGIN);
         }
     }
@@ -714,7 +803,40 @@ public class WeekView extends View {
     private void drawHours(Rect r, Canvas canvas, Paint p) {
         clearHourBackground(r, canvas, p);
 
-        // TODO: Draw a highlight on the selected hour (if needed)
+        // Draw a highlight on the selected hour (if needed)
+        if (mSelectionMode != SELECTION_HIDDEN) {
+            p.setColor(mHourSelectedColor);
+            r.top = mSelectionHour * (mCellHeight + HOUR_GAP);
+            r.bottom = r.top + mCellHeight + 2 * HOUR_GAP;
+            r.left = 0;
+            r.right = mHoursWidth;
+            canvas.drawRect(r, p);
+
+            boolean drawBorder = false;
+            if (!drawBorder) {
+                r.top += HOUR_GAP;
+                r.bottom -= HOUR_GAP;
+            }
+
+            // Also draw the highlight on the grid
+            p.setColor(mGridAreaSelectedColor);
+            int daynum = mSelectionDay - mFirstJulianDay;
+            r.left = mHoursWidth + daynum * (mCellWidth + DAY_GAP);
+            r.right = r.left + mCellWidth;
+            canvas.drawRect(r, p);
+
+            // Draw a border around the highlighted grid hour.
+            if (drawBorder) {
+                Path path = mPath;
+                r.top += HOUR_GAP;
+                r.bottom -= HOUR_GAP;
+                path.reset();
+                path.addRect(r.left, r.top, r.right, r.bottom, Direction.CW);
+                canvas.drawPath(path, mSelectionPaint);
+            }
+
+            // TODO: saveSelectionPosition
+        }
 
         p.setColor(mHourLabelColor);
         p.setTextSize(HOURS_FONT_SIZE);
@@ -815,11 +937,16 @@ public class WeekView extends View {
         mCellHeight = (mGridAreaHeight - ((mNumHours + 1) * HOUR_GAP)) / mNumHours;
         int usedGridAreaHeight = (mCellHeight + HOUR_GAP) * mNumHours + HOUR_GAP;
         int bottomSpace = mGridAreaHeight - usedGridAreaHeight;
-        mMeetingGeometry.setHourHeight(mCellHeight);
+        MeetingGeometry.setHourHeight(mCellHeight);
 
         mFirstCell = mBannerPlusMargin;
 
         createOffscreenBitmapAndCanvas(width, bottomSpace);
+
+        if (mFirstHour == -1) {
+            initFirstHour();
+            mFirstHourOffset = 0;
+        }
     }
 
     private void createOffscreenBitmapAndCanvas(int width, int bottomSpace) {
@@ -833,6 +960,15 @@ public class WeekView extends View {
             }
             mOffscreenBitmap = Bitmap.createBitmap(width, mBitmapHeight, Bitmap.Config.RGB_565);
             mOffscreenCanvas = new Canvas(mOffscreenBitmap);
+        }
+    }
+
+    private void initFirstHour() {
+        mFirstHour = mSelectionHour - mNumHours / 2;
+        if (mFirstHour < 0) {
+            mFirstHour = 0;
+        } else if (mFirstHour + mNumHours > 24) {
+            mFirstHour = 24 - mNumHours;
         }
     }
 
@@ -871,5 +1007,273 @@ public class WeekView extends View {
         Matcher m = drawTextSanitizerFilter.matcher(string);
         string = m.replaceAll(",").replace('\n', ' ').replace('\n', ' ');
         return string;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        int action = ev.getAction();
+
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                mGestureDetector.onTouchEvent(ev);
+                return true;
+
+            case MotionEvent.ACTION_MOVE:
+                mGestureDetector.onTouchEvent(ev);
+                return true;
+
+            case MotionEvent.ACTION_UP:
+                mGestureDetector.onTouchEvent(ev);
+                if (mOnFlingCalled) {
+                    return true;
+                }
+                if ((mTouchMode & TOUCH_MODE_HSCROLL) != 0) {
+                    mTouchMode = TOUCH_MODE_INITIAL_STATE;
+                    if (Math.abs(mViewStartX) > HORIZONTAL_SCROLL_THRESHOLD) {
+                        // TODO: The user has gone beyond the threshold so
+                        // switch
+                        // views
+                        mViewStartX = 0;
+                        return true;
+                    } else {
+                        // Not beyond the threshold so invalidate which will
+                        // cause
+                        // the view to snap back. Also call recalc() to ensure
+                        // that we have the correct starting date and title.
+                        recalc();
+                        invalidate();
+                        mViewStartX = 0;
+                    }
+                }
+
+                // If we were scrolling, then reset the selected hour so that it
+                // is visible.
+                if (mScrolling) {
+                    mScrolling = false;
+                    resetSelectedHour();
+                    mRedrawScreen = true;
+                    invalidate();
+                }
+                return true;
+
+                // This case isn't expected to happen.
+            case MotionEvent.ACTION_CANCEL:
+                mGestureDetector.onTouchEvent(ev);
+                mScrolling = false;
+                resetSelectedHour();
+                return true;
+
+            default:
+                if (mGestureDetector.onTouchEvent(ev)) {
+                    return true;
+                }
+                return super.onTouchEvent(ev);
+        }
+    }
+
+    // This is called after scrolling stops to move the selected hour
+    // to the visible part of the screen.
+    private void resetSelectedHour() {
+        if (mSelectionHour < mFirstHour + 1) {
+            mSelectionHour = mFirstHour + 1;
+            mSelectedMeetingInfo = null;
+            mSelectedMeetings.clear();
+            mComputeSelectedMeeting = true;
+        } else if (mSelectionHour > mFirstHour + mNumHours - 3) {
+            mSelectionHour = mFirstHour + mNumHours - 3;
+            mSelectedMeetingInfo = null;
+            mSelectedMeetings.clear();
+            mComputeSelectedMeeting = true;
+        }
+    }
+
+    /**
+     * @param ev
+     */
+    public void doSingleTapUp(MotionEvent ev) {
+        int x = (int) ev.getX();
+        int y = (int) ev.getY();
+        int selectedDay = mSelectionDay;
+        int selectedHour = mSelectionHour;
+
+        boolean validPosition = setSelectionFromPosition(x, y);
+        if (!validPosition) {
+            // return if the touch wasn't on an area of concern
+            return;
+        }
+
+        mSelectionMode = SELECTION_SELECTED;
+        mRedrawScreen = true;
+        invalidate();
+
+        boolean launchNewView = false;
+        if (mSelectedMeetingInfo != null) {
+            // If the tap is on an event, launch the "View event" view
+            launchNewView = true;
+        } else if (mSelectedMeetingInfo == null && selectedDay == mSelectionDay
+                && selectedHour == mSelectionHour) {
+            // If the tap is on an already selected hour slot,
+            // then launch the Day/Agenda view. Otherwise, just select the hour
+            // slot.
+            launchNewView = true;
+        }
+
+        if (launchNewView) {
+            // TODO: switch views
+        }
+    }
+
+    /**
+     * Sets mSelectionDay and mSelectionHour based on the (x,y) touch position.
+     * If the touch position is not within the displayed grid, then this method
+     * returns false.
+     * 
+     * @param x the x position of the touch
+     * @param y the y position of the touch
+     * @return true if the touch position is valid
+     */
+    private boolean setSelectionFromPosition(int x, int y) {
+        if (x < mHoursWidth) {
+            return false;
+        }
+
+        int day = (x - mHoursWidth) / (mCellWidth + DAY_GAP);
+        if (day >= mNumDays) {
+            day = mNumDays - 1;
+        }
+        day += mFirstJulianDay;
+        int hour = (y - mFirstCell - mFirstHourOffset) / (mCellHeight + HOUR_GAP);
+        hour += mFirstHour;
+        mSelectionHour = hour;
+        mSelectionDay = day;
+        findSelectedEvent(x, y);
+        Log.i("Cal", "setSelectionFromPosition( " + x + ", " + y + " ) day: "
+                + day
+                + " hour: " + hour
+                + " mFirstCell: " + mFirstCell + " mFirstHourOffset: " +
+                mFirstHourOffset);
+        if (mSelectedMeetingInfo != null) {
+            Log.i(TAG, "  num events: " + mSelectedMeetings.size() + " event: "
+                    + mSelectedMeetingInfo.getTitle());
+        }
+        return true;
+    }
+
+    /**
+     * @param x
+     * @param y
+     */
+    private void findSelectedEvent(int x, int y) {
+        int date = mSelectionDay;
+        int cellWidth = mCellWidth;
+        Set<MeetingGeometry> events = mMeetingsGeometryInfoMap.keySet();
+        int left = mHoursWidth + (mSelectionDay - mFirstJulianDay) * (cellWidth + DAY_GAP);
+        int top = 0;
+        mSelectedMeetingInfo = null;
+
+        mSelectedMeetings.clear();
+
+        // Adjust y for the scrollable bitmap
+        y += mViewStartY - mFirstCell;
+
+        // Use a region around (x,y) for the selection region
+        Rect region = mRect;
+        region.left = x - 10;
+        region.right = x + 10;
+        region.top = y - 10;
+        region.bottom = y + 10;
+
+        for (MeetingGeometry geometry : events) {
+            MeetingInfo event = mMeetingsGeometryInfoMap.get(geometry);
+            // Compute the event rectangle.
+            if (!geometry.computeEventRect(date, left, top, cellWidth, event)) {
+                continue;
+            }
+
+            // If the event intersects the selection region, then add it to
+            // mSelectedMeetings.
+            if (geometry.eventIntersectsSelection(region)) {
+                mSelectedMeetings.add(geometry);
+            }
+        }
+
+        // If there are any events in the selected region, then assign the
+        // closest one to mSelectedMeeting.
+        if (mSelectedMeetings.size() > 0) {
+            int len = mSelectedMeetings.size();
+            MeetingInfo closestMeetingInfo = null;
+            MeetingGeometry closestMeetingGeometry = null;
+            float minDist = mViewWidth + mViewHeight; // some large distance
+            for (int index = 0; index < len; index++) {
+                MeetingGeometry geometry = mSelectedMeetings.get(index);
+                float dist = geometry.pointToEvent(x, y);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestMeetingGeometry = geometry;
+                    closestMeetingInfo = mMeetingsGeometryInfoMap.get(geometry);
+                }
+            }
+            mSelectedMeetingInfo = closestMeetingInfo;
+            mSelectedMeetingGeometry = closestMeetingGeometry;
+
+            // Keep the selected hour and day consistent with the selected
+            // event. That is, snap it to the closest one. They could be
+            // different if we touched on an empty hour
+            // slot very close to an event in the previous hour slot. In
+            // that case we will select the nearby event.
+            int startDay = mSelectedMeetingInfo.getStartDay();
+            int endDay = mSelectedMeetingInfo.getEndDay();
+            if (mSelectionDay < startDay) {
+                mSelectionDay = startDay;
+            } else if (mSelectionDay > endDay) {
+                mSelectionDay = endDay;
+            }
+
+            int startHour = mSelectedMeetingInfo.getStart().hour;
+            int endHour = mSelectedMeetingInfo.getEnd().hour;
+            if (mSelectionHour < startHour) {
+                mSelectionHour = startHour;
+            } else if (mSelectionHour > endHour) {
+                mSelectionHour = endHour;
+            }
+        }
+    }
+
+    /**
+     * @param ev
+     */
+    public void doLongPress(MotionEvent ev) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * @param e1
+     * @param e2
+     * @param distanceX
+     * @param distanceY
+     */
+    public void doScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * @param e1
+     * @param e2
+     * @param velocityX
+     * @param velocityY
+     */
+    public void doFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * @param ev
+     */
+    public void doDown(MotionEvent ev) {
+        // TODO Auto-generated method stub
+
     }
 }

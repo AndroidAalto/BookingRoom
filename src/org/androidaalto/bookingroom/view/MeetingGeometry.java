@@ -19,35 +19,34 @@ package org.androidaalto.bookingroom.view;
 import org.androidaalto.bookingroom.logic.MeetingInfo;
 
 import android.graphics.Rect;
-import android.text.format.Time;
 
 public class MeetingGeometry {
     // This is the space from the grid line to the event rectangle.
-    private int mCellMargin = 0;
+    private static int mCellMargin = 0;
 
-    private float mMinuteHeight;
+    private static float mMinuteHeight;
 
-    private float mHourGap;
-    private float mMinEventHeight;
+    private static float mHourGap;
+    private static float mMinEventHeight;
 
     float top;
     float bottom;
     float left;
     float right;
 
-    void setCellMargin(int cellMargin) {
+    static void setCellMargin(int cellMargin) {
         mCellMargin = cellMargin;
     }
 
-    void setHourGap(float gap) {
+    static void setHourGap(float gap) {
         mHourGap = gap;
     }
 
-    void setMinEventHeight(float height) {
+    static void setMinEventHeight(float height) {
         mMinEventHeight = height;
     }
 
-    void setHourHeight(float height) {
+    static void setHourHeight(float height) {
         mMinuteHeight = height / 60.0f;
     }
 
@@ -55,18 +54,15 @@ public class MeetingGeometry {
     // Returns true if the rectangle is visible on the screen.
     boolean computeEventRect(int currentJulianDay, int left, int top, int cellWidth, MeetingInfo meeting) {
         float cellMinuteHeight = mMinuteHeight;
-        Time startDate = meeting.getStart();
-        Time endDate = meeting.getEnd();
-        int startDay = Time.getJulianDay(startDate.normalize(true), startDate.gmtoff);
-        int endDay = Time.getJulianDay(endDate.normalize(true), endDate.gmtoff);
+        int startDay = meeting.getStartDay();
+        int endDay = meeting.getEndDay();
 
         if (startDay > currentJulianDay || endDay < currentJulianDay) {
             return false;
         }
 
-        // Get the starting minutes since midnight
-        int startTime = startDate.hour * 60 + startDate.minute;
-        int endTime = endDate.hour * 60 + endDate.minute;
+        int startTime = meeting.getStartMinutesSinceMidnight();
+        int endTime = meeting.getEndMinutesSinceMidnight();
 
         // If the event started on a previous day, then show it starting
         // at the beginning of this day.
