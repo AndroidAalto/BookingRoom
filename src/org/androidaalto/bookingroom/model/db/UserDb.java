@@ -72,6 +72,35 @@ public class UserDb {
     }
 
     /**
+     * @param id
+     * @return
+     */
+    public static User get(long id) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
+
+        try {
+            Cursor cursor = db.rawQuery("SELECT * FROM user WHERE id == ? LIMIT 1",
+                    new String[] {
+                        "" + id
+                    });
+
+            if (cursor.moveToNext()) {
+                return new User(
+                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("name")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("email")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("password")),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("salt")),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("is_admin")) > 0);
+            }
+            return null;
+        } finally {
+            db.close();
+            DataBaseHelper.getInstance().close();
+        }
+    }
+
+    /**
      * @param user
      * @return
      */
