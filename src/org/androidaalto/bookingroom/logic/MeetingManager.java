@@ -36,6 +36,13 @@ public class MeetingManager {
     private static final long MAX_START_TIME_INCREASE_IN_MILLIS = 120960000;
     private static final long MAX_LENGTH_IN_MILLIS = 720000;
 
+    /**
+     * Books the meeting.
+     * 
+     * @param meetingInfo The meeting to be booked.
+     * @return The meeting stored.
+     * @throws IllegalArgumentException When the preconditions fail.
+     */
     public static MeetingInfo book(MeetingInfo meetingInfo) {
         final long nowMillis = System.currentTimeMillis();
         final Time now = new Time();
@@ -67,6 +74,15 @@ public class MeetingManager {
         return new MeetingInfo(null, meeting.getStart(), meeting.getEnd(), meeting.getTitle());
     }
 
+    /**
+     * Returns all the meetings from <code>from</code> time to
+     * <code>offsetDays</code> forward.
+     * 
+     * @param from The time from which from the meetings should be returned.
+     * @param offsetDays The amount of days forward from the <code>from</code>
+     *            parameter the meetings should be returned.
+     * @return List of meetings, an empty list if no results found.
+     */
     public static List<MeetingInfo> getMeetings(Time from, int offsetDays) {
         Time end = new Time();
         end.set(from.toMillis(true) + ((long) offsetDays) * 86400000L);
@@ -78,5 +94,22 @@ public class MeetingManager {
                     .getTitle()));
         }
         return meetingInfos;
+    }
+
+    /**
+     * Returns a meeting with its user data. If no meeting found for id, returns
+     * <code>null</code>.
+     * 
+     * @param id The meeting ID
+     * @return The meeting
+     */
+    public static MeetingInfo getMeeting(long id) {
+        Meeting meeting = MeetingDb.get(id);
+        if (meeting == null)
+            return null;
+        User user = UserDb.get(meeting.getUserId());
+        return new MeetingInfo(new UserInfo(user.getName(), user.getEmail()), meeting.getStart(),
+                meeting.getEnd(), meeting
+                        .getTitle());
     }
 }
