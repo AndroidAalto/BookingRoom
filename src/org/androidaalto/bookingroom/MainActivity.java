@@ -30,7 +30,7 @@ import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends Activity {
 
@@ -52,22 +52,20 @@ public class MainActivity extends Activity {
     public void onResume() {
         super.onResume();
         
-        Log.e("DBW", ""+UserDb.returnUserCount());
-        Log.e("DBW", ""+MeetingDb.returnMeetingCount());
+        Log.e("DBW", ""+UserDb.getUserCount());
+        Log.e("DBW", ""+MeetingDb.getMeetingCount());
         User myUser = UserDb.get("test@test.com");
         Log.e("DBW", ""+ myUser.getName());
-        
-        ArrayList<Meeting> myMeetings = null;
         
         Time start = new Time();
         start.set(26, 8 - 1, 2011); // 0-11 !!
         Time end = new Time();
         end.set(30, 8 - 1, 2011); // 0-11 !!
         
-        myMeetings = MeetingDb.getMeetings(start, end) ;
+        List<Meeting> meetings = MeetingDb.getMeetings(start, end) ;
         
-        if ( myMeetings.size() > 0 ) {
-            for ( Meeting m : myMeetings) {
+        if ( meetings.size() > 0 ) {
+            for ( Meeting m : meetings) {
                 Log.e("DBW", "Id: " + m.getId() + " Title: " + m.getTitle());
             }
         }

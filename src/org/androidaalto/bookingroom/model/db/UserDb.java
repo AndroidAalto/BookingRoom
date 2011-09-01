@@ -16,6 +16,7 @@
    You should have received a copy of the GNU General Public License
    along with BookingRoom. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.androidaalto.bookingroom.model.db;
 
 import org.androidaalto.bookingroom.model.User;
@@ -23,31 +24,22 @@ import org.androidaalto.bookingroom.model.User;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 public class UserDb {
-
-    public static int returnUserCount() {
+    public static int getUserCount() {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
-        Log.e("UDB", ""+ db.toString());
-        
-        try { 
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM user", null);
 
-            int i = 0;
-            while ( cursor.moveToNext() ) {
-                i = cursor.getInt(0);
+        try {
+            Cursor cursor = db.rawQuery("SELECT COUNT(*) AS count FROM user", null);
+
+            if (cursor.moveToNext()) {
+                return cursor.getInt(cursor.getColumnIndexOrThrow("count"));
             }
-            db.close();
-            DataBaseHelper.getInstance().close();
-            return i;
-        } catch (Exception e) {
-            Log.e("TEST", "captured exception" + e.toString());
             return 0;
         } finally {
             db.close();
             DataBaseHelper.getInstance().close();
-        }    
+        }
     }
 
     /**
@@ -58,26 +50,20 @@ public class UserDb {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
 
         try {
-            User user = null;
-            Cursor cursor = db.rawQuery("SELECT * FROM user WHERE email == '" + email + "' LIMIT 1", null);
+            Cursor cursor = db.rawQuery("SELECT * FROM user WHERE email == ? LIMIT 1",
+                    new String[] {
+                        email
+                    });
 
-            if ( cursor.moveToNext() ) {
-                user = new User(
-                        cursor.getInt(0),
-                        cursor.getString(1),
-                        cursor.getString(2),
-                        cursor.getString(3),
-                        cursor.getInt(4),
-                        false //TODO
-                );
+            if (cursor.moveToNext()) {
+                return new User(
+                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("name")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("email")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("password")),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("salt")),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("is_admin")) > 0);
             }
-            
-            db.close();
-            DataBaseHelper.getInstance().close();
-            
-            return user;
-        } catch (Exception e) {
-            Log.e("TEST", "captured exception" + e.toString());
             return null;
         } finally {
             db.close();
