@@ -24,11 +24,14 @@
 
 package org.androidaalto.bookingroom.view;
 
+import org.androidaalto.bookingroom.MainActivity;
+import org.androidaalto.bookingroom.MeetingActivity;
 import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.logic.MeetingManager;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -221,6 +224,8 @@ public class WeekView extends View {
 
     private Map<MeetingGeometry, MeetingInfo> mMeetingsGeometryInfoMap = new HashMap<MeetingGeometry, MeetingInfo>();
 
+    private Context mContext;
+
     /**
      * @param context
      */
@@ -253,6 +258,8 @@ public class WeekView extends View {
      * @param context
      */
     private void init(Context context) {
+        mContext = context;
+        
         calculateScaleFonts();
 
         MeetingGeometry.setMinEventHeight(MIN_EVENT_HEIGHT);
@@ -1106,21 +1113,24 @@ public class WeekView extends View {
         mRedrawScreen = true;
         invalidate();
 
-        boolean launchNewView = false;
         if (mSelectedMeetingInfo != null) {
             // If the tap is on an event, launch the "View event" view
-            launchNewView = true;
         } else if (mSelectedMeetingInfo == null && selectedDay == mSelectionDay
                 && selectedHour == mSelectionHour) {
             // If the tap is on an already selected hour slot,
             // then launch the Day/Agenda view. Otherwise, just select the hour
             // slot.
-            launchNewView = true;
+            switchToAddMeetingView();
         }
+    }
 
-        if (launchNewView) {
-            // TODO: switch views
-        }
+    /**
+     * 
+     */
+    private void switchToAddMeetingView() {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setClassName(mContext, MeetingActivity.class.getName());
+        mContext.startActivity(intent);
     }
 
     /**
