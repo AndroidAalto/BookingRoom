@@ -2,6 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
+    android:paddingLeft="40dip"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 
@@ -12,24 +13,29 @@
         android:id="@+id/meetingComponent">
 
         <TextView
+            style="@style/header"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Meeting"
+            android:text="@string/meetingHeaderText"
             android:id="@+id/meetingHeader">
         </TextView>
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/normalText"
+            android:layout_width="100dip"
             android:layout_height="wrap_content"
             android:layout_below="@+id/meetingHeader"
-            android:text="Title"
+            android:text="@string/meetingLabelText"
             android:id="@+id/titleLabel">
         </TextView>
 
         <EditText
-            android:layout_width="wrap_content"
+            style="@style/sEdit"
+            android:layout_width="300dip"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/titleLabel"
+            android:layout_below="@+id/meetingHeader"
+            android:hint="@string/hintTitle"
             android:id="@+id/titleEdit">
         </EditText>
 
@@ -42,32 +48,39 @@
         android:id="@+id/scheduleComponent">
 
         <TextView
+            style="@style/header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Schedule"
+            android:text="@string/scheduleHeaderText"
             android:id="@+id/scheduleHeader">
         </TextView>
-
+ 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/timerText"
+            android:layout_width="100dip"
             android:layout_height="wrap_content"
             android:layout_below="@+id/scheduleHeader"
-            android:text="Start"
+            android:text="@string/scheduleStartLabel"
             android:id="@+id/startLabel">
         </TextView>
-
+        
+        <!-- http://stackoverflow.com/questions/6790917/setting-android-timepicker-in-xml -->
         <TimePicker
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingRight="100dip"
             android:layout_toRightOf="@+id/startLabel"
+            android:layout_below="@+id/scheduleHeader"
             android:id="@+id/startPicker">
         </TimePicker>
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/timerText"
+            android:layout_width="100dip"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/startLabel"
-            android:text="End"
+            android:layout_toRightOf="@+id/startPicker"
+            android:layout_below="@+id/scheduleHeader"
+            android:text="@string/scheduleEndLabel"
             android:id="@+id/endLabel">
         </TextView>
 
@@ -75,9 +88,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/endLabel"
+            android:layout_below="@+id/scheduleHeader"
             android:id="@+id/endPicker">
         </TimePicker>
-
     </RelativeLayout>
 
     <RelativeLayout
@@ -87,41 +100,79 @@
         android:id="@+id/contactComponent">
 
         <TextView
+            style="@style/header"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Contact"
+            android:text="@string/contactHeaderText"
             android:id="@+id/contactHeader">
         </TextView>
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/normalText"
+            android:layout_width="100dip"
             android:layout_height="wrap_content"
             android:layout_below="@+id/contactHeader"
-            android:text="Name"
+            android:text="@string/contactNameLabel"
             android:id="@+id/nameLabel">
         </TextView>
 
         <EditText
-            android:layout_width="wrap_content"
+            style="@style/sEdit"
+            android:layout_width="300dip"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/nameLabel"
+            android:layout_below="@+id/contactHeader"
+            android:hint="@string/hintName"
             android:id="@+id/nameEdit">
         </EditText>
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/normalText"
+            android:layout_width="100dip"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/nameLabel"
-            android:text="Email"
+            android:paddingLeft="20dip"
+            android:layout_below="@+id/contactHeader"
+            android:layout_toRightOf="@+id/nameEdit"
+            android:text="@string/contactEmailLabel"
             android:id="@+id/emailLabel">
         </TextView>
 
         <EditText
-            android:layout_width="wrap_content"
+            style="@style/sEdit"
+            android:hint="@string/hintEmail"
+            android:layout_width="300dip"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/emailLabel"
+            android:layout_below="@+id/contactHeader"
             android:id="@+id/emailEdit">
         </EditText>
+
+    </RelativeLayout>
+    
+    <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:gravity="center_vertical|center_horizontal" 
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dip"
+        android:id="@+id/buttonsComponent">
+
+        <Button
+            style="@style/sButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/buttonOK"
+            android:id="@+id/buttonOK">
+        </Button>
+    
+        <Button
+            style="@style/sButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/buttonOK"
+            android:text="@string/buttonCancel"
+            android:id="@+id/buttonCancel">
+        </Button>
 
     </RelativeLayout>
 </LinearLayout>
