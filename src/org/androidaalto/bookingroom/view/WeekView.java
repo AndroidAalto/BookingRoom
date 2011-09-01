@@ -35,6 +35,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.graphics.Path;
+import android.graphics.Path.Direction;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -86,6 +88,8 @@ public class WeekView extends View {
     private Rect mDestRect = new Rect();
     private Paint mPaint = new Paint();
     private Paint mEventTextPaint = new Paint();
+    private Path mPath = new Path();
+    private Paint mSelectionPaint = new Paint();
 
     Time mBaseDate;
     private Time mCurrentTime;
@@ -191,6 +195,7 @@ public class WeekView extends View {
     public static final int MINUTES_PER_DAY = MINUTES_PER_HOUR * 24;
 
     private static int mGridAreaBackgroundColor;
+    private static int mGridAreaSelectedColor;
     private static int mHourBackgroundColor;
     private static int mHourLabelColor;
     private static int mGridLineHorizontalColor;
@@ -201,6 +206,8 @@ public class WeekView extends View {
     private static int mSundayColor;
     private static int mEventTextColor;
     private static int mMeetingBackgroundColor;
+    private static int mHourSelectedColor;
+    private static int mCalendarDateSelected;
 
     private float[] mCharWidths = new float[MAX_EVENT_TEXT_LEN];
 
@@ -357,6 +364,9 @@ public class WeekView extends View {
         mDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
         mEventTextColor = mResources.getColor(R.color.calendar_event_text_color);
         mMeetingBackgroundColor = mResources.getColor(R.color.meeting_background_color);
+        mHourSelectedColor = mResources.getColor(R.color.calendar_hour_selected);
+        mGridAreaSelectedColor = mResources.getColor(R.color.calendar_grid_area_selected);
+        mCalendarDateSelected = mResources.getColor(R.color.calendar_date_selected);
     }
 
     private void calculateScaleFonts() {
@@ -463,7 +473,19 @@ public class WeekView extends View {
     private void drawDayHeaderLoop(Rect r, Canvas canvas, Paint p) {
         clearDayBannerBackground(r, canvas, p);
 
-        // TODO: Draw a highlight on the selected day (if any)
+     // Draw a highlight on the selected day (if any), but only if we are
+        // displaying more than one day.
+        if (mSelectionMode != SELECTION_HIDDEN) {
+            if (mNumDays > 1) {
+                p.setColor(mCalendarDateSelected);
+                r.top = 0;
+                r.bottom = mBannerPlusMargin;
+                int daynum = mSelectionDay - mFirstJulianDay;
+                r.left = mHoursWidth + daynum * (mCellWidth + DAY_GAP);
+                r.right = r.left + mCellWidth;
+                canvas.drawRect(r, p);
+            }
+        }
 
         p.setTextSize(NORMAL_FONT_SIZE);
         p.setTextAlign(Paint.Align.CENTER);
@@ -781,7 +803,40 @@ public class WeekView extends View {
     private void drawHours(Rect r, Canvas canvas, Paint p) {
         clearHourBackground(r, canvas, p);
 
-        // TODO: Draw a highlight on the selected hour (if needed)
+        // Draw a highlight on the selected hour (if needed)
+        if (mSelectionMode != SELECTION_HIDDEN) {
+            p.setColor(mHourSelectedColor);
+            r.top = mSelectionHour * (mCellHeight + HOUR_GAP);
+            r.bottom = r.top + mCellHeight + 2 * HOUR_GAP;
+            r.left = 0;
+            r.right = mHoursWidth;
+            canvas.drawRect(r, p);
+
+            boolean drawBorder = false;
+            if (!drawBorder) {
+                r.top += HOUR_GAP;
+                r.bottom -= HOUR_GAP;
+            }
+
+            // Also draw the highlight on the grid
+            p.setColor(mGridAreaSelectedColor);
+            int daynum = mSelectionDay - mFirstJulianDay;
+            r.left = mHoursWidth + daynum * (mCellWidth + DAY_GAP);
+            r.right = r.left + mCellWidth;
+            canvas.drawRect(r, p);
+
+            // Draw a border around the highlighted grid hour.
+            if (drawBorder) {
+                Path path = mPath;
+                r.top += HOUR_GAP;
+                r.bottom -= HOUR_GAP;
+                path.reset();
+                path.addRect(r.left, r.top, r.right, r.bottom, Direction.CW);
+                canvas.drawPath(path, mSelectionPaint);
+            }
+
+            // TODO: saveSelectionPosition
+        }
 
         p.setColor(mHourLabelColor);
         p.setTextSize(HOURS_FONT_SIZE);
