@@ -29,12 +29,21 @@ public class MeetingInfo {
     private final Time start;
     private final Time end;
     private final String title;
+    private int startDay;
+    private int endDay;
+    private int startMinutesSinceMidnight;
+    private int endMinutesSinceMidnight;
 
     public MeetingInfo(UserInfo user, Time start, Time end, String title) {
         this.user = user;
         this.start = start;
         this.end = end;
         this.title = title;
+
+        startDay = Time.getJulianDay(start.normalize(true), start.gmtoff);
+        startMinutesSinceMidnight = start.hour * 60 + start.minute;
+        endDay = Time.getJulianDay(end.normalize(true), end.gmtoff);
+        endMinutesSinceMidnight = end.hour * 60 + end.minute;
     }
 
     public UserInfo getUser() {
@@ -51,5 +60,33 @@ public class MeetingInfo {
 
     public String getTitle() {
         return title;
+    }
+
+    /**
+     * @return the start Julian day
+     */
+    public int getStartDay() {
+        return startDay;
+    }
+
+    /**
+     * @return the end Julian day
+     */
+    public int getEndDay() {
+        return endDay;
+    }
+
+    /**
+     * @return the minutes since midnight till the start time
+     */
+    public int getStartMinutesSinceMidnight() {
+        return startMinutesSinceMidnight;
+    }
+
+    /**
+     * @return the minutes since midnight till the end time
+     */
+    public int getEndMinutesSinceMidnight() {
+        return endMinutesSinceMidnight;
     }
 }
