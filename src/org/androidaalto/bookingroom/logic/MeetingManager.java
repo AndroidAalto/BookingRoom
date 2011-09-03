@@ -23,6 +23,8 @@ import org.androidaalto.bookingroom.model.Meeting;
 import org.androidaalto.bookingroom.model.User;
 import org.androidaalto.bookingroom.model.db.MeetingDb;
 import org.androidaalto.bookingroom.model.db.UserDb;
+import org.androidaalto.bookingroom.validation.ValidationException;
+import org.androidaalto.bookingroom.validation.ValidationResult;
 
 import android.text.format.Time;
 
@@ -33,35 +35,19 @@ import java.util.List;
  * @author hannu
  */
 public class MeetingManager {
-    private static final long MAX_START_TIME_INCREASE_IN_MILLIS = 120960000;
-    private static final long MAX_LENGTH_IN_MILLIS = 720000;
+    private static final MeetingInfoValidator validator = new MeetingInfoValidator();
 
     /**
      * Books the meeting.
      * 
      * @param meetingInfo The meeting to be booked.
      * @return The meeting stored.
-     * @throws IllegalArgumentException When the preconditions fail.
+     * @throws ValidationException When the preconditions fail.
      */
     public static MeetingInfo book(MeetingInfo meetingInfo) {
-        final long nowMillis = System.currentTimeMillis();
-        final Time now = new Time();
-        now.set(nowMillis);
-        if (meetingInfo.getStart().before(now))
-            throw new IllegalArgumentException("Starting time in past");
-        if (!meetingInfo.getStart().before(meetingInfo.getEnd()))
-            throw new IllegalArgumentException("Starting time not before ending time");
-        final Time maximumStartingTime = new Time();
-        maximumStartingTime.set(nowMillis + MAX_START_TIME_INCREASE_IN_MILLIS);
-        if (meetingInfo.getStart().after(maximumStartingTime))
-            throw new IllegalArgumentException("Starting time too far ahead in the future");
-        final Time maximumEndingTime = new Time();
-        maximumEndingTime.set(meetingInfo.getStart().toMillis(false) + MAX_LENGTH_IN_MILLIS);
-        if (meetingInfo.getEnd().after(maximumEndingTime))
-            throw new IllegalArgumentException("Too long of a meeting");
-        if (!MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
-            throw new IllegalArgumentException("Clashing meeting");
-
+        final ValidationResult result = validator.validate(meetingInfo);
+        if (result.hasErrors())
+            throw new ValidationException(result, "There are validation errors in " + meetingInfo);
         User user = UserDb.get(meetingInfo.getUser().getEmail());
         if (user == null)
             user = UserDb.store(new User(meetingInfo.getUser().getName(), meetingInfo.getUser()
