@@ -21,14 +21,35 @@ package org.androidaalto.bookingroom;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.widget.EditText;
+import android.widget.TimePicker;
 
 public class MeetingActivity extends Activity {
 
+    EditText titleEdit, nameEdit, emailEdit;
+    TimePicker startPicker, endPicker;
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.meeting);
-    }
+        
+        startPicker = (TimePicker) findViewById(R.id.startPicker);
+        endPicker   = (TimePicker) findViewById(R.id.endPicker);
+        titleEdit   = (EditText) findViewById(R.id.titleEdit);
+        nameEdit    = (EditText) findViewById(R.id.nameEdit);
+        emailEdit   = (EditText) findViewById(R.id.emailEdit);
+        
+        startPicker.setIs24HourView(true);
+        endPicker.setIs24HourView(true);
+        
+        // One hour meeting by default
+        endPicker.setCurrentHour(startPicker.getCurrentHour() + 1);
 
+        Bundle extras = getIntent().getExtras();
+        if ( extras != null ) {
+            String value = extras.getString("keyName");
+        }
+    }
 }
