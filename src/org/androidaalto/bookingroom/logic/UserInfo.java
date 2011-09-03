@@ -26,9 +26,13 @@ public class UserInfo {
     private final String name;
     private final String email;
     private final String password;
-    private final int salt;
+    private final Integer salt;
 
-    public UserInfo(String name, String email, String password, int salt) {
+    public UserInfo(String name, String email) {
+        this(name, email, null, null);
+    }
+
+    public UserInfo(String name, String email, String password, Integer salt) {
         this.name = name;
         this.email = email;
         this.password = password;
@@ -47,7 +51,7 @@ public class UserInfo {
         return password;
     }
 
-    public int getSalt() {
+    public Integer getSalt() {
         return salt;
     }
 }
