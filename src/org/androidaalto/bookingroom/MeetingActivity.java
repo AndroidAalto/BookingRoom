@@ -62,7 +62,12 @@ public class MeetingActivity extends Activity {
             startPicker.setCurrentMinute(00);
             
             // One hour meeting by default
-            endPicker.setCurrentHour(startPicker.getCurrentHour() + 1);
+            if ( startPicker.getCurrentHour() >= 23 ) {
+                endPicker.setCurrentHour(00);
+            } else {
+                endPicker.setCurrentHour(startPicker.getCurrentHour() + 1);
+            }
+
             endPicker.setCurrentMinute(00);
             
             if ( extras.getString("title") != null ) {
