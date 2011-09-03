@@ -28,6 +28,8 @@ import org.androidaalto.bookingroom.MeetingActivity;
 import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.logic.MeetingManager;
+import org.androidaalto.bookingroom.logic.UserInfo;
+import org.androidaalto.bookingroom.model.User;
 
 import android.content.Context;
 import android.content.Intent;
@@ -1138,14 +1140,30 @@ public class WeekView extends View {
     }
 
     /**
-     * 
+     * @param mSelectedMeetingInfo2
+     * Edit an existing meeting
      */
     private void switchToAddMeetingView() {
+        
         Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.putExtra("day", mSelectionDay);
+        intent.putExtra("hour", mSelectionHour);
+        
+        if ( mSelectedMeetingInfo != null ) {
+            UserInfo user = mSelectedMeetingInfo.getUser();
+            
+            intent.putExtra("name", user.getName());
+            intent.putExtra("email", user.getEmail());
+            intent.putExtra("title", mSelectedMeetingInfo.getTitle());
+            intent.putExtra("start", mSelectedMeetingInfo.getStartDay());
+            intent.putExtra("end", mSelectedMeetingInfo.getEndDay());
+        }
+        
         intent.setClassName(mContext, MeetingActivity.class.getName());
         mContext.startActivity(intent);
     }
 
+    
     /**
      * Sets mSelectionDay and mSelectionHour based on the (x,y) touch position.
      * If the touch position is not within the displayed grid, then this method
