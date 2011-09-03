@@ -28,7 +28,7 @@ public class MeetingActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.add_meeting);
+        setContentView(R.layout.meeting);
     }
 
 }
