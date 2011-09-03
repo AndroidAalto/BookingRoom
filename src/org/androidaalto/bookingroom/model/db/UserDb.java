@@ -28,15 +28,18 @@ import android.database.sqlite.SQLiteDatabase;
 public class UserDb {
     public static int getUserCount() {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
-
+        Cursor cursor = null;
         try {
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) AS count FROM user", null);
+            cursor = db.rawQuery("SELECT COUNT(*) AS count FROM user", null);
 
             if (cursor.moveToNext()) {
                 return cursor.getInt(cursor.getColumnIndexOrThrow("count"));
             }
             return 0;
         } finally {
+            if ( cursor != null ) {
+                cursor.close();
+            }
             db.close();
             DataBaseHelper.getInstance().close();
         }
@@ -49,8 +52,9 @@ public class UserDb {
     public static User get(String email) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
 
+        Cursor cursor = null;
         try {
-            Cursor cursor = db.rawQuery("SELECT * FROM user WHERE email == ? LIMIT 1",
+            cursor = db.rawQuery("SELECT * FROM user WHERE email == ? LIMIT 1",
                     new String[] {
                         email
                     });
@@ -66,6 +70,9 @@ public class UserDb {
             }
             return null;
         } finally {
+            if ( cursor != null ) {
+                cursor.close();
+            }
             db.close();
             DataBaseHelper.getInstance().close();
         }

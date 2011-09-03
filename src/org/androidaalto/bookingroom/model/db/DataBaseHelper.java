@@ -105,9 +105,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * @return
      */
     public static void setContext(Context context) {
-        if (instance != null)
-            throw new IllegalStateException("Instance has already been instantiated");
         instance = new DataBaseHelper(context);
-        Log.d(TAG, "instantiated");
     }
+
 }
