@@ -1114,12 +1114,10 @@ public class WeekView extends View {
         invalidate();
 
         if (mSelectedMeetingInfo != null) {
-            // If the tap is on an event, launch the "View event" view
+            // If the tap is on an event, launch the "View meeting" view to edit it
         } else if (mSelectedMeetingInfo == null && selectedDay == mSelectionDay
                 && selectedHour == mSelectionHour) {
-            // If the tap is on an already selected hour slot,
-            // then launch the Day/Agenda view. Otherwise, just select the hour
-            // slot.
+            // If the tap is on an already selected hour slot, then jump to "View meeting"
             switchToAddMeetingView();
         }
     }
@@ -1253,8 +1251,24 @@ public class WeekView extends View {
      * @param ev
      */
     public void doLongPress(MotionEvent ev) {
-        // TODO Auto-generated method stub
+        int x = (int) ev.getX();
+        int y = (int) ev.getY();
 
+        boolean validPosition = setSelectionFromPosition(x, y);
+        if (!validPosition) {
+            // return if the touch wasn't on an area of concern
+            return;
+        }
+
+        mSelectionMode = SELECTION_LONGPRESS;
+        mRedrawScreen = true;
+        invalidate();
+        
+        if (mSelectedMeetingInfo != null) {
+            // If the tap is on an event, launch the "View meeting" view to edit it
+        } else if (mSelectedMeetingInfo == null) {
+            switchToAddMeetingView();
+        }
     }
 
     /**
