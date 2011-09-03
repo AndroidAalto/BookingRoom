@@ -33,9 +33,9 @@ public class MeetingDb {
     public static List<Meeting> getMeetings(Time from, Time to) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
         ArrayList<Meeting> records = new ArrayList<Meeting>();
-
+        Cursor cursor = null;
         try {
-            Cursor cursor = db
+            cursor = db
                     .rawQuery(
                             "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE start > ? AND end < ?",
                             new String[] {
@@ -61,6 +61,9 @@ public class MeetingDb {
 
             return records;
         } finally {
+            if ( cursor != null ) {
+                cursor.close();
+            }
             db.close();
             DataBaseHelper.getInstance().close();
         }
@@ -68,15 +71,18 @@ public class MeetingDb {
 
     public static int getMeetingCount() {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
-
+        Cursor cursor = null;
         try {
-            Cursor cursor = db.rawQuery("SELECT COUNT(*) AS count FROM meeting", null);
+            cursor = db.rawQuery("SELECT COUNT(*) AS count FROM meeting", null);
 
             if (cursor.moveToNext()) {
                 return cursor.getInt(cursor.getColumnIndexOrThrow("count"));
             }
             return 0;
         } finally {
+            if ( cursor != null ) {
+                cursor.close();
+            }
             db.close();
             DataBaseHelper.getInstance().close();
         }
@@ -88,9 +94,9 @@ public class MeetingDb {
      */
     public static Meeting get(long id) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
-
+        Cursor cursor = null;
         try {
-            Cursor cursor = db
+            cursor = db
                     .rawQuery(
                             "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE id == ? LIMIT 1",
                             new String[] {
@@ -112,6 +118,9 @@ public class MeetingDb {
             }
             return null;
         } finally {
+            if ( cursor != null ) {
+                cursor.close();
+            }
             db.close();
             DataBaseHelper.getInstance().close();
         }
