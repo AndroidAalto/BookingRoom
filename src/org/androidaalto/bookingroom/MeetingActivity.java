@@ -51,24 +51,37 @@ public class MeetingActivity extends Activity {
         Bundle extras = getIntent().getExtras();
         
         if ( extras != null ) {
-            Integer myDay = extras.getInt("day");
-            Integer myHour = extras.getInt("hour");
-
-            Time myTime = new Time();
-            myTime.setJulianDay(myDay);
-            meetingHeader.setText(meetingHeader.getText() + " - " + myTime.monthDay + "/" + (myTime.month + 1) + "/" + myTime.year);
-
-            startPicker.setCurrentHour(myHour.intValue());
-            startPicker.setCurrentMinute(00);
-            
-            // One hour meeting by default
-            if ( startPicker.getCurrentHour() >= 23 ) {
-                endPicker.setCurrentHour(00);
+            Time start = new Time();
+            // Use full date if we've it. Otherwise, use day and hour from the bundle.
+            String startStr = extras.getString("start");
+            if (startStr != null) {
+                start.parse(startStr);
             } else {
-                endPicker.setCurrentHour(startPicker.getCurrentHour() + 1);
+                start.setJulianDay(extras.getInt("day"));
+                start.hour = extras.getInt("hour");
+                start.minute = 0;
+            }
+            Time end = new Time();
+            // Use full date if we've it. Otherwise, use day and hour from the bundle.
+            String endStr = extras.getString("end");
+            if (endStr != null) {
+                end.parse(endStr);
+            } else {
+                end.setJulianDay(extras.getInt("day"));
+                end.hour = extras.getInt("hour")+1;
+                if (end.hour > 23)
+                    end.hour = 0;
+                end.minute = 0;
             }
 
-            endPicker.setCurrentMinute(00);
+            meetingHeader.setText(meetingHeader.getText() + " - " + start.format("%d/%m/%Y"));
+
+            startPicker.setCurrentHour(start.hour);
+            startPicker.setCurrentMinute(start.minute);
+            
+            // One hour meeting by default
+            endPicker.setCurrentHour(end.hour);
+            endPicker.setCurrentMinute(end.minute);
             
             if ( extras.getString("title") != null ) {
                 titleEdit.setText(extras.getString("title"));

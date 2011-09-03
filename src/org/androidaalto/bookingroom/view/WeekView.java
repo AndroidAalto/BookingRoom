@@ -188,7 +188,7 @@ public class WeekView extends View {
     private int mSelectionMode = SELECTION_HIDDEN;
 
     private static int HORIZONTAL_SCROLL_THRESHOLD = 50;
-    
+
     private FlingEffect mFlingEffect = new FlingEffect();
 
     /* The extra space to leave above the text in normal events */
@@ -954,7 +954,7 @@ public class WeekView extends View {
         mGridAreaHeight = height - mFirstCell;
         mCellHeight = (mGridAreaHeight - ((mNumHours + 1) * HOUR_GAP)) / mNumHours;
         Log.d(TAG, "maxViewStartY: " + mMaxViewStartY);
-        
+
         int usedGridAreaHeight = (mCellHeight + HOUR_GAP) * mNumHours + HOUR_GAP;
         int bottomSpace = mGridAreaHeight - usedGridAreaHeight;
         MeetingGeometry.setHourHeight(mCellHeight);
@@ -1131,6 +1131,7 @@ public class WeekView extends View {
         if (mSelectedMeetingInfo != null) {
             // If the tap is on an event, launch the "View meeting" view to edit
             // it
+            switchToAddMeetingView();
         } else if (mSelectedMeetingInfo == null && selectedDay == mSelectionDay
                 && selectedHour == mSelectionHour) {
             // If the tap is on an already selected hour slot, then jump to
@@ -1140,30 +1141,28 @@ public class WeekView extends View {
     }
 
     /**
-     * @param mSelectedMeetingInfo2
-     * Edit an existing meeting
+     * @param mSelectedMeetingInfo2 Edit an existing meeting
      */
     private void switchToAddMeetingView() {
-        
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.putExtra("day", mSelectionDay);
         intent.putExtra("hour", mSelectionHour);
-        
-        if ( mSelectedMeetingInfo != null ) {
+
+        if (mSelectedMeetingInfo != null) {
             UserInfo user = mSelectedMeetingInfo.getUser();
-            
-            intent.putExtra("name", user.getName());
-            intent.putExtra("email", user.getEmail());
+            if (user != null) {
+                intent.putExtra("name", user.getName());
+                intent.putExtra("email", user.getEmail());
+            }
             intent.putExtra("title", mSelectedMeetingInfo.getTitle());
-            intent.putExtra("start", mSelectedMeetingInfo.getStartDay());
-            intent.putExtra("end", mSelectedMeetingInfo.getEndDay());
+            intent.putExtra("start", mSelectedMeetingInfo.getStart().format2445());
+            intent.putExtra("end", mSelectedMeetingInfo.getEnd().format2445());
         }
-        
+
         intent.setClassName(mContext, MeetingActivity.class.getName());
         mContext.startActivity(intent);
     }
 
-    
     /**
      * Sets mSelectionDay and mSelectionHour based on the (x,y) touch position.
      * If the touch position is not within the displayed grid, then this method
