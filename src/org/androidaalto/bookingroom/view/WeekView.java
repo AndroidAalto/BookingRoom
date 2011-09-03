@@ -24,7 +24,6 @@
 
 package org.androidaalto.bookingroom.view;
 
-import org.androidaalto.bookingroom.MainActivity;
 import org.androidaalto.bookingroom.MeetingActivity;
 import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingInfo;
@@ -81,6 +80,9 @@ public class WeekView extends View {
     private int mBitmapHeight;
     private int mGridAreaHeight;
     private int mCellHeight;
+    private int mScrollStartY;
+    private int mPreviousDirection;
+    private int mPreviousDistanceX;
     private int mNumHours = 10;
 
     // Pre-allocate these objects and re-use them
@@ -113,6 +115,7 @@ public class WeekView extends View {
     private int mNumDays = 7;
     private int mViewStartX;
     private int mViewStartY;
+    private int mMaxViewStartY;
     private int mFirstCell;
     private int mFirstHour = -1;
     private int mFirstHourOffset;
@@ -259,7 +262,7 @@ public class WeekView extends View {
      */
     private void init(Context context) {
         mContext = context;
-        
+
         calculateScaleFonts();
 
         MeetingGeometry.setMinEventHeight(MIN_EVENT_HEIGHT);
@@ -441,6 +444,7 @@ public class WeekView extends View {
      */
     @Override
     protected void onDraw(Canvas viewCanvas) {
+        Log.d(TAG, "WeekView.onDraw()");
         if (mRemeasure) {
             remeasure(getWidth(), getHeight());
             mRemeasure = false;
@@ -480,7 +484,7 @@ public class WeekView extends View {
     private void drawDayHeaderLoop(Rect r, Canvas canvas, Paint p) {
         clearDayBannerBackground(r, canvas, p);
 
-     // Draw a highlight on the selected day (if any), but only if we are
+        // Draw a highlight on the selected day (if any), but only if we are
         // displaying more than one day.
         if (mSelectionMode != SELECTION_HIDDEN) {
             if (mNumDays > 1) {
@@ -600,6 +604,9 @@ public class WeekView extends View {
         dest.left = 0;
         dest.right = mViewWidth;
 
+        Log.d(TAG, "copying bitmap to screen: " );
+        Log.d(TAG, "\ttop: " + src.top);
+        Log.d(TAG, "\tbottom: " + src.bottom);
         canvas.save();
         canvas.clipRect(dest);
         canvas.drawColor(0, PorterDuff.Mode.CLEAR);
@@ -942,6 +949,7 @@ public class WeekView extends View {
     private void remeasure(int width, int height) {
         mGridAreaHeight = height - mFirstCell;
         mCellHeight = (mGridAreaHeight - ((mNumHours + 1) * HOUR_GAP)) / mNumHours;
+        mMaxViewStartY = mBitmapHeight - mGridAreaHeight;
         int usedGridAreaHeight = (mCellHeight + HOUR_GAP) * mNumHours + HOUR_GAP;
         int bottomSpace = mGridAreaHeight - usedGridAreaHeight;
         MeetingGeometry.setHourHeight(mCellHeight);
@@ -954,6 +962,8 @@ public class WeekView extends View {
             initFirstHour();
             mFirstHourOffset = 0;
         }
+        
+        mViewStartY = mFirstHour * (mCellHeight + HOUR_GAP) - mFirstHourOffset;
     }
 
     private void createOffscreenBitmapAndCanvas(int width, int bottomSpace) {
@@ -1114,10 +1124,12 @@ public class WeekView extends View {
         invalidate();
 
         if (mSelectedMeetingInfo != null) {
-            // If the tap is on an event, launch the "View meeting" view to edit it
+            // If the tap is on an event, launch the "View meeting" view to edit
+            // it
         } else if (mSelectedMeetingInfo == null && selectedDay == mSelectionDay
                 && selectedHour == mSelectionHour) {
-            // If the tap is on an already selected hour slot, then jump to "View meeting"
+            // If the tap is on an already selected hour slot, then jump to
+            // "View meeting"
             switchToAddMeetingView();
         }
     }
@@ -1263,9 +1275,10 @@ public class WeekView extends View {
         mSelectionMode = SELECTION_LONGPRESS;
         mRedrawScreen = true;
         invalidate();
-        
+
         if (mSelectedMeetingInfo != null) {
-            // If the tap is on an event, launch the "View meeting" view to edit it
+            // If the tap is on an event, launch the "View meeting" view to edit
+            // it
         } else if (mSelectedMeetingInfo == null) {
             switchToAddMeetingView();
         }
@@ -1277,9 +1290,84 @@ public class WeekView extends View {
      * @param distanceX
      * @param distanceY
      */
-    public void doScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        // TODO Auto-generated method stub
+    public void doScroll(MotionEvent e1, MotionEvent e2, float deltaX, float deltaY) {
+        Log.d(TAG, "WeekView.doScroll()");
+        // Use the distance from the current point to the initial touch instead
+        // of deltaX and deltaY to avoid accumulating floating-point rounding
+        // errors. Also, we don't need floats, we can use ints.
+        int distanceX = (int) e1.getX() - (int) e2.getX();
+        int distanceY = (int) e1.getY() - (int) e2.getY();
 
+        // If we haven't figured out the predominant scroll direction yet,
+        // then do it now.
+        if (mTouchMode == TOUCH_MODE_DOWN) {
+            int absDistanceX = Math.abs(distanceX);
+            int absDistanceY = Math.abs(distanceY);
+            mScrollStartY = mViewStartY;
+            mPreviousDistanceX = 0;
+            mPreviousDirection = 0;
+
+            // If the x distance is at least twice the y distance, then lock
+            // the scroll horizontally. Otherwise scroll vertically.
+            if (absDistanceX >= 2 * absDistanceY) {
+                Log.d(TAG, "Horizontal scroll");
+                mTouchMode = TOUCH_MODE_HSCROLL;
+                mViewStartX = distanceX;
+                // TODO: initNextView;
+            } else {
+                Log.d(TAG, "Vertical scroll");
+                mTouchMode = TOUCH_MODE_VSCROLL;
+            }
+        } else if ((mTouchMode & TOUCH_MODE_HSCROLL) != 0) {
+            // We are already scrolling horizontally, so check if we
+            // changed the direction of scrolling so that the other week
+            // is now visible.
+            mViewStartX = distanceX;
+            if (distanceX != 0) {
+                int direction = (distanceX > 0) ? 1 : -1;
+                if (direction != mPreviousDirection) {
+                    // The user has switched the direction of scrolling
+                    // so re-init the next view
+                    // TODO: initNextView(-mViewStartX);
+                    mPreviousDirection = direction;
+                }
+            }
+
+            // If we have moved at least the HORIZONTAL_SCROLL_THRESHOLD,
+            // then change the title to the new day (or week), but only
+            // if we haven't already changed the title.
+            // TODO: Change the title
+            mPreviousDistanceX = distanceX;
+        }
+
+        if ((mTouchMode & TOUCH_MODE_VSCROLL) != 0) {
+            mViewStartY = mScrollStartY + distanceY;
+            if (mViewStartY < 0) {
+                mViewStartY = 0;
+            } else if (mViewStartY > mMaxViewStartY) {
+                mViewStartY = mMaxViewStartY;
+            }
+            computeFirstHour();
+        }
+
+        mScrolling = true;
+
+        if (mSelectionMode != SELECTION_HIDDEN) {
+            mSelectionMode = SELECTION_HIDDEN;
+            mRedrawScreen = true;
+        }
+        Log.d(TAG, "invalidating");
+        invalidate();
+    }
+
+    /**
+     * Recomputes the first full hour that is visible on screen after the screen
+     * is scrolled.
+     */
+    private void computeFirstHour() {
+        // Compute the first full hour that is visible on screen
+        mFirstHour = (mViewStartY + mCellHeight + HOUR_GAP - 1) / (mCellHeight + HOUR_GAP);
+        mFirstHourOffset = mFirstHour * (mCellHeight + HOUR_GAP) - mViewStartY;
     }
 
     /**
@@ -1297,7 +1385,9 @@ public class WeekView extends View {
      * @param ev
      */
     public void doDown(MotionEvent ev) {
-        // TODO Auto-generated method stub
-
+        mTouchMode = TOUCH_MODE_DOWN;
+        mViewStartX = 0;
+        mOnFlingCalled = false;
+//        getHandler().removeCallbacks(mContinueScroll);
     }
 }
