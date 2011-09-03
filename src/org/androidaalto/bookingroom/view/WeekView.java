@@ -186,6 +186,8 @@ public class WeekView extends View {
     private int mSelectionMode = SELECTION_HIDDEN;
 
     private static int HORIZONTAL_SCROLL_THRESHOLD = 50;
+    
+    private FlingEffect mFlingEffect = new FlingEffect();
 
     /* The extra space to leave above the text in normal events */
     private static final int NORMAL_TEXT_TOP_MARGIN = 2;
@@ -604,7 +606,7 @@ public class WeekView extends View {
         dest.left = 0;
         dest.right = mViewWidth;
 
-        Log.d(TAG, "copying bitmap to screen: " );
+        Log.d(TAG, "copying bitmap to screen: ");
         Log.d(TAG, "\ttop: " + src.top);
         Log.d(TAG, "\tbottom: " + src.bottom);
         canvas.save();
@@ -949,7 +951,8 @@ public class WeekView extends View {
     private void remeasure(int width, int height) {
         mGridAreaHeight = height - mFirstCell;
         mCellHeight = (mGridAreaHeight - ((mNumHours + 1) * HOUR_GAP)) / mNumHours;
-        mMaxViewStartY = mBitmapHeight - mGridAreaHeight;
+        Log.d(TAG, "maxViewStartY: " + mMaxViewStartY);
+        
         int usedGridAreaHeight = (mCellHeight + HOUR_GAP) * mNumHours + HOUR_GAP;
         int bottomSpace = mGridAreaHeight - usedGridAreaHeight;
         MeetingGeometry.setHourHeight(mCellHeight);
@@ -957,12 +960,13 @@ public class WeekView extends View {
         mFirstCell = mBannerPlusMargin;
 
         createOffscreenBitmapAndCanvas(width, bottomSpace);
+        mMaxViewStartY = mBitmapHeight - mGridAreaHeight;
 
         if (mFirstHour == -1) {
             initFirstHour();
             mFirstHourOffset = 0;
         }
-        
+
         mViewStartY = mFirstHour * (mCellHeight + HOUR_GAP) - mFirstHourOffset;
     }
 
@@ -1048,15 +1052,14 @@ public class WeekView extends View {
                     mTouchMode = TOUCH_MODE_INITIAL_STATE;
                     if (Math.abs(mViewStartX) > HORIZONTAL_SCROLL_THRESHOLD) {
                         // TODO: The user has gone beyond the threshold so
-                        // switch
-                        // views
+                        // switch views
                         mViewStartX = 0;
                         return true;
                     } else {
                         // Not beyond the threshold so invalidate which will
-                        // cause
-                        // the view to snap back. Also call recalc() to ensure
-                        // that we have the correct starting date and title.
+                        // cause the view to snap back. Also call recalc() to
+                        // ensure that we have the correct starting date and
+                        // title.
                         recalc();
                         invalidate();
                         mViewStartX = 0;
@@ -1364,7 +1367,7 @@ public class WeekView extends View {
      * Recomputes the first full hour that is visible on screen after the screen
      * is scrolled.
      */
-    private void computeFirstHour() {
+    void computeFirstHour() {
         // Compute the first full hour that is visible on screen
         mFirstHour = (mViewStartY + mCellHeight + HOUR_GAP - 1) / (mCellHeight + HOUR_GAP);
         mFirstHourOffset = mFirstHour * (mCellHeight + HOUR_GAP) - mViewStartY;
@@ -1377,8 +1380,22 @@ public class WeekView extends View {
      * @param velocityY
      */
     public void doFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        // TODO Auto-generated method stub
+        mTouchMode = TOUCH_MODE_INITIAL_STATE;
+        mSelectionMode = SELECTION_HIDDEN;
+        mOnFlingCalled = true;
+        int deltaX = (int) e2.getX() - (int) e1.getX();
+        int distanceX = Math.abs(deltaX);
+        int deltaY = (int) e2.getY() - (int) e1.getY();
+        int distanceY = Math.abs(deltaY);
 
+        if ((distanceX >= HORIZONTAL_SCROLL_THRESHOLD) && (distanceX > distanceY)) {
+            // TODO: The user has gone beyond the threshold so
+            // switch views
+        }
+
+        // Continue scrolling vertically
+        mFlingEffect.init(this, (int) velocityY / 20);
+        post(mFlingEffect);
     }
 
     /**
@@ -1388,6 +1405,40 @@ public class WeekView extends View {
         mTouchMode = TOUCH_MODE_DOWN;
         mViewStartX = 0;
         mOnFlingCalled = false;
-//        getHandler().removeCallbacks(mContinueScroll);
+        getHandler().removeCallbacks(mFlingEffect);
+    }
+
+    /**
+     * @param mAbsDeltaY
+     */
+    public void increaseViewStartY(int amount) {
+        mViewStartY += amount;
+        if (mViewStartY < 0)
+            mViewStartY = 0;
+        else if (mViewStartY > mMaxViewStartY)
+            mViewStartY = mMaxViewStartY;
+    }
+
+    /**
+     * @return
+     */
+    public int getViewStartY() {
+        return mViewStartY;
+    }
+
+    /**
+     * @return
+     */
+    public int getMaxViewStartY() {
+        return mMaxViewStartY;
+    }
+
+    /**
+     * 
+     */
+    public void finishScrolling() {
+        mScrolling = false;
+        resetSelectedHour();
+        mRedrawScreen = true;
     }
 }
