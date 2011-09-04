@@ -144,6 +144,7 @@
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/emailLabel"
             android:layout_below="@+id/contactHeader"
+            android:inputType="textEmailAddress"
             android:id="@+id/emailEdit">
         </EditText>
 
