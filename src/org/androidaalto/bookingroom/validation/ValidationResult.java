@@ -43,4 +43,8 @@ public class ValidationResult {
         errors.add(e);
         return e;
     }
+
+    public List<ObjectError> getErrors() {
+        return errors;
+    }
 }
