@@ -19,12 +19,22 @@
 
 package org.androidaalto.bookingroom;
 
+import org.androidaalto.bookingroom.logic.MeetingManager;
+import org.androidaalto.bookingroom.validation.ObjectError;
+import org.androidaalto.bookingroom.validation.ValidationException;
+import org.androidaalto.bookingroom.validation.ValidationResult;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.text.format.Time;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
+
+import java.util.List;
 
 public class MeetingActivity extends Activity {
 
@@ -39,6 +49,11 @@ public class MeetingActivity extends Activity {
     EditText titleEdit, nameEdit, emailEdit;
     TimePicker startPicker, endPicker;
     TextView meetingHeader;
+    Button buttonOk, buttonCancel;
+
+    private int day;
+    private int month;
+    private int year;
 
     /** Called when the activity is first created. */
     @Override
@@ -52,6 +67,8 @@ public class MeetingActivity extends Activity {
         titleEdit = (EditText) findViewById(R.id.titleEdit);
         nameEdit = (EditText) findViewById(R.id.nameEdit);
         emailEdit = (EditText) findViewById(R.id.emailEdit);
+        buttonOk = (Button) findViewById(R.id.buttonOK);
+        buttonCancel = (Button) findViewById(R.id.buttonCancel);
 
         startPicker.setIs24HourView(true);
         endPicker.setIs24HourView(true);
@@ -68,6 +85,9 @@ public class MeetingActivity extends Activity {
                 start.hour = extras.getInt(EXTRA_START_HOUR);
                 start.minute = 0;
             }
+            day = start.monthDay;
+            month = start.month;
+            year = start.year;
 
             Time end = new Time();
             // Use full date if we've it. Otherwise set the end to one hour
@@ -95,5 +115,49 @@ public class MeetingActivity extends Activity {
             nameEdit.setText(extras.getString(EXTRA_CONTACT_NAME));
             emailEdit.setText(extras.getString(EXTRA_CONTACT_EMAIL));
         }
+
+        final Activity meetingActivity = this;
+        buttonOk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Time start = new Time();
+                start.set(0, startPicker.getCurrentMinute(), startPicker.getCurrentHour(), day,
+                        month, year);
+                start.normalize(true);
+
+                Time end = new Time();
+                end.set(0, endPicker.getCurrentMinute(), endPicker.getCurrentHour(), day, month,
+                        year);
+                end.normalize(true);
+
+                // Add one day to the end date if is earlier than start
+                if (end.before(start)) {
+                    end.monthDay++;
+                    end.normalize(true);
+                }
+
+                try {
+                    MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
+                            .getText().toString(), emailEdit.getText().toString());
+                    // If we reach this point then booking went ok
+                    meetingActivity.finish();
+                } catch (ValidationException e) {
+                    // Initially set a generic error message
+                    String errorMessage = "Please check all the fields!";
+                    ValidationResult result = e.getErrors();
+                    List<ObjectError> errors = result.getErrors();
+                    if (!errors.isEmpty())
+                        errorMessage = errors.get(0).getMessage();
+                    Toast.makeText(meetingActivity, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+        buttonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                meetingActivity.finish();
+            }
+        });
     }
 }
