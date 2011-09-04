@@ -29,7 +29,6 @@ import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.logic.MeetingManager;
 import org.androidaalto.bookingroom.logic.UserInfo;
-import org.androidaalto.bookingroom.model.User;
 
 import android.content.Context;
 import android.content.Intent;
@@ -1140,23 +1139,22 @@ public class WeekView extends View {
         }
     }
 
-    /**
-     * @param mSelectedMeetingInfo2 Edit an existing meeting
-     */
     private void switchToMeetingView() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.putExtra("day", mSelectionDay);
-        intent.putExtra("hour", mSelectionHour);
+        intent.putExtra(MeetingActivity.EXTRA_DAY, mSelectionDay);
+        intent.putExtra(MeetingActivity.EXTRA_START_HOUR, mSelectionHour);
 
         if (mSelectedMeetingInfo != null) {
             UserInfo user = mSelectedMeetingInfo.getUser();
             if (user != null) {
-                intent.putExtra("name", user.getName());
-                intent.putExtra("email", user.getEmail());
+                intent.putExtra(MeetingActivity.EXTRA_CONTACT_NAME, user.getName());
+                intent.putExtra(MeetingActivity.EXTRA_CONTACT_EMAIL, user.getEmail());
             }
-            intent.putExtra("title", mSelectedMeetingInfo.getTitle());
-            intent.putExtra("start", mSelectedMeetingInfo.getStart().format2445());
-            intent.putExtra("end", mSelectedMeetingInfo.getEnd().format2445());
+            intent.putExtra(MeetingActivity.EXTRA_TITLE, mSelectedMeetingInfo.getTitle());
+            intent.putExtra(MeetingActivity.EXTRA_START_TIME, mSelectedMeetingInfo.getStart()
+                    .format2445());
+            intent.putExtra(MeetingActivity.EXTRA_END_TIME, mSelectedMeetingInfo.getEnd()
+                    .format2445());
         }
 
         intent.setClassName(mContext, MeetingActivity.class.getName());
