@@ -19,6 +19,8 @@
 
 package org.androidaalto.bookingroom.model.db;
 
+import org.androidaalto.bookingroom.R;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -37,16 +39,16 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             "CREATE TABLE meeting(" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "user_id INTEGER," +
-                    "title VARCHAR(100)," +
+                    "title VARCHAR("+ R.string.max_meeting_title_length +")," +
                     "start TIMESTAMP," +
                     "end TIMESTAMP)";
 
     private static final String CREATE_USER_SQL =
             "CREATE TABLE user(" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "name VARCHAR(30)," +
-                    "email VARCHAR(30)," +
-                    "password VARCHAR(50)," +
+                    "name VARCHAR(" + R.string.max_user_name_length + ")," +
+                    "email VARCHAR("+ R.string.max_user_mail_length +")," +
+                    "password VARCHAR("+ R.string.max_user_password_length +")," +
                     "salt VARCHAR(50)," +
                     "is_admin BOOLEAN default false)";
 
@@ -67,32 +69,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         Log.d(TAG, "going to create tables");
         db.execSQL(CREATE_MEETING_SQL);
         db.execSQL(CREATE_USER_SQL);
-
-        // Dummy values
-        ContentValues value = new ContentValues();
-        value.put("id", 1);
-        value.put("name", "Test");
-        value.put("email", "test@test.com");
-        // value.put("password", "test");
-        // value.put("salt", "test");
-        value.put("is_admin", false);
-        db.insert("user", null, value);
-
-        value = new ContentValues();
-        value.put("id", 1);
-        value.put("user_id", 1);
-        value.put("title", "Meeting");
-        value.put("start", "1314519236000"); // Sun, 28 Aug 2011 08:13:56 GMT
-        value.put("end", "1314522836000"); // Sun, 28 Aug 2011 09:13:56 GMT
-        db.insert("meeting", null, value);
-
-        value = new ContentValues();
-        value.put("id", 2);
-        value.put("user_id", 1);
-        value.put("title", "Another Meeting");
-        value.put("start", "1314608400000"); // Mon, 29 Aug 2011 09:00:00 GMT
-        value.put("end", "1314615600000"); // Mon, 29 Aug 2011 11:00:00 GMT
-        db.insert("meeting", null, value);
 
         Log.d("DBHELPER", "tables created");
     }
