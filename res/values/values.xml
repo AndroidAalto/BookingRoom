@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="max_user_name_length">30</string>
+    <string name="max_user_mail_length">30</string>
+    <string name="max_user_password_length">50</string>
+    <string name="max_meeting_title_length">100</string>
+</resources>

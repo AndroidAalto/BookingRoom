@@ -36,6 +36,7 @@
             android:layout_toRightOf="@+id/titleLabel"
             android:layout_below="@+id/meetingHeader"
             android:hint="@string/hintTitle"
+            android:maxLength="@string/max_meeting_title_length"
             android:id="@+id/titleEdit">
         </EditText>
 
@@ -123,6 +124,7 @@
             android:layout_toRightOf="@+id/nameLabel"
             android:layout_below="@+id/contactHeader"
             android:hint="@string/hintName"
+            android:maxLength="@string/max_user_name_length"
             android:id="@+id/nameEdit">
         </EditText>
 
@@ -144,6 +146,7 @@
             android:layout_height="wrap_content"
             android:layout_toRightOf="@+id/emailLabel"
             android:layout_below="@+id/contactHeader"
+            android:maxLength="@string/max_user_mail_length"
             android:inputType="textEmailAddress"
             android:id="@+id/emailEdit">
         </EditText>
