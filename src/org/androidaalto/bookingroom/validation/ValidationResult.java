@@ -36,11 +36,15 @@ public class ValidationResult {
     }
 
     public boolean hasErrors() {
-        return errors.isEmpty();
+        return !errors.isEmpty();
     }
 
     public ObjectError addError(ObjectError e) {
         errors.add(e);
         return e;
+    }
+
+    public List<ObjectError> getErrors() {
+        return errors;
     }
 }

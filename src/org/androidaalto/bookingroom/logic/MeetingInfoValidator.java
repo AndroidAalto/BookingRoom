@@ -27,12 +27,19 @@ import org.androidaalto.bookingroom.validation.Validator;
 
 import android.text.format.Time;
 
+import java.util.regex.Pattern;
+
 /**
  * @author hannu
  */
 public class MeetingInfoValidator implements Validator<MeetingInfo> {
     private static final long MAX_START_TIME_INCREASE_IN_MILLIS = 120960000;
-    private static final long MAX_LENGTH_IN_MILLIS = 720000;
+    private static final int MAX_HOURS = 2;
+    private static final long MAX_LENGTH_IN_MILLIS = MAX_HOURS * 60 * 60 * 1000;
+
+    // If we really want to use regular expressions then we should use this one:
+    // http://www.ex-parrot.com/pdw/Mail-RFC822-Address.html
+    private static final Pattern pattern = Pattern.compile(".+@.+\\.[a-z]+");
 
     @Override
     public ValidationResult validate(MeetingInfo meetingInfo) {
@@ -43,18 +50,36 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
         if (meetingInfo.getStart().before(now))
             errors.addError(new FieldError(meetingInfo, "start", "beforeNow",
                     "Starting time in past"));
+
         if (!meetingInfo.getStart().before(meetingInfo.getEnd()))
             errors.addError(new FieldError(meetingInfo, "end", "beforeStart",
                     "Ending time before starting time"));
+
         final Time maximumStartingTime = new Time();
         maximumStartingTime.set(nowMillis + MAX_START_TIME_INCREASE_IN_MILLIS);
         if (meetingInfo.getStart().after(maximumStartingTime))
             errors.addError(new FieldError(meetingInfo, "start", "afterMax",
                     "Starting time too far ahead in the future"));
+
         final Time maximumEndingTime = new Time();
-        maximumEndingTime.set(meetingInfo.getStart().toMillis(false) + MAX_LENGTH_IN_MILLIS);
+        maximumEndingTime.set(meetingInfo.getStart().toMillis(true) + MAX_LENGTH_IN_MILLIS);
         if (meetingInfo.getEnd().after(maximumEndingTime))
-            errors.addError(new FieldError(meetingInfo, "end", "tooLong", "Too long of a meeting"));
+            errors.addError(new FieldError(meetingInfo, "end", "tooLong",
+                    "Meeting can't be longer than " + MAX_HOURS + " hours."));
+
+        UserInfo userInfo = meetingInfo.getUser();
+        String contactName = userInfo.getName();
+        if (contactName == null || contactName.trim().length() == 0) {
+            errors.addError(new ObjectError(userInfo, "name", "Contact name is required"));
+        }
+
+        String contactMail = userInfo.getEmail();
+        if (contactMail == null || contactMail.trim().length() == 0) {
+            errors.addError(new ObjectError(userInfo, "mail", "Contact mail is required"));
+        } else if (!pattern.matcher(contactMail).matches()) {
+            errors.addError(new ObjectError(userInfo, "mail", "Contact mail is invalid"));
+        }
+
         if (!MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
             errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
         return errors;
