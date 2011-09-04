@@ -32,7 +32,8 @@ import android.text.format.Time;
  */
 public class MeetingInfoValidator implements Validator<MeetingInfo> {
     private static final long MAX_START_TIME_INCREASE_IN_MILLIS = 120960000;
-    private static final long MAX_LENGTH_IN_MILLIS = 720000;
+    private static final int MAX_HOURS = 2;
+    private static final long MAX_LENGTH_IN_MILLIS = MAX_HOURS * 60 * 60 * 1000;
 
     @Override
     public ValidationResult validate(MeetingInfo meetingInfo) {
@@ -52,9 +53,9 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
             errors.addError(new FieldError(meetingInfo, "start", "afterMax",
                     "Starting time too far ahead in the future"));
         final Time maximumEndingTime = new Time();
-        maximumEndingTime.set(meetingInfo.getStart().toMillis(false) + MAX_LENGTH_IN_MILLIS);
+        maximumEndingTime.set(meetingInfo.getStart().toMillis(true) + MAX_LENGTH_IN_MILLIS);
         if (meetingInfo.getEnd().after(maximumEndingTime))
-            errors.addError(new FieldError(meetingInfo, "end", "tooLong", "Too long of a meeting"));
+            errors.addError(new FieldError(meetingInfo, "end", "tooLong", "Meeting can't be longer than " + MAX_HOURS  + " hours."));
         if (!MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
             errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
         return errors;
