@@ -37,7 +37,8 @@ import java.util.List;
 public class MeetingManager {
     private static final MeetingInfoValidator validator = new MeetingInfoValidator();
 
-    public static MeetingInfo book(Time start, Time end, String title, String contactName, String contactMail) throws ValidationException {
+    public static MeetingInfo book(Time start, Time end, String title, String contactName,
+            String contactMail) throws ValidationException {
         return book(new MeetingInfo(new UserInfo(contactName, contactMail), start, end, title));
     }
 
@@ -61,7 +62,8 @@ public class MeetingManager {
                 meetingInfo.getTitle(),
                 meetingInfo.getStart(),
                 meetingInfo.getEnd()));
-        return new MeetingInfo(null, meeting.getStart(), meeting.getEnd(), meeting.getTitle());
+        return new MeetingInfo(meeting.getId(), null, meeting.getStart(), meeting.getEnd(),
+                meeting.getTitle());
     }
 
     /**
@@ -80,8 +82,10 @@ public class MeetingManager {
         List<Meeting> meetings = MeetingDb.getMeetings(from, end);
         List<MeetingInfo> meetingInfos = new ArrayList<MeetingInfo>();
         for (Meeting meeting : meetings) {
-            meetingInfos.add(new MeetingInfo(null, meeting.getStart(), meeting.getEnd(), meeting
-                    .getTitle()));
+            meetingInfos.add(new MeetingInfo(meeting.getId(), null, meeting.getStart(), meeting
+                    .getEnd(),
+                    meeting
+                            .getTitle()));
         }
         return meetingInfos;
     }
@@ -98,7 +102,8 @@ public class MeetingManager {
         if (meeting == null)
             return null;
         User user = UserDb.get(meeting.getUserId());
-        return new MeetingInfo(new UserInfo(user.getName(), user.getEmail()), meeting.getStart(),
+        return new MeetingInfo(meeting.getId(), new UserInfo(user.getId(), user.getName(),
+                user.getEmail()), meeting.getStart(),
                 meeting.getEnd(), meeting
                         .getTitle());
     }

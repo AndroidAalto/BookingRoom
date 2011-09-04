@@ -25,6 +25,7 @@ import android.text.format.Time;
  * @author hannu
  */
 public class MeetingInfo {
+    private final Integer id;
     private final UserInfo user;
     private final Time start;
     private final Time end;
@@ -35,6 +36,11 @@ public class MeetingInfo {
     private int endMinutesSinceMidnight;
 
     public MeetingInfo(UserInfo user, Time start, Time end, String title) {
+        this(null, user, start, end, title);
+    }
+
+    public MeetingInfo(Integer id, UserInfo user, Time start, Time end, String title) {
+        this.id = id;
         this.user = user;
         this.start = start;
         this.end = end;
@@ -44,6 +50,10 @@ public class MeetingInfo {
         startMinutesSinceMidnight = start.hour * 60 + start.minute;
         endDay = Time.getJulianDay(end.normalize(true), end.gmtoff);
         endMinutesSinceMidnight = end.hour * 60 + end.minute;
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     public UserInfo getUser() {
