@@ -23,20 +23,30 @@ package org.androidaalto.bookingroom.logic;
  * @author hannu
  */
 public class UserInfo {
+    private final Integer id;
     private final String name;
     private final String email;
     private final String password;
     private final Integer salt;
 
-    public UserInfo(String name, String email) {
-        this(name, email, null, null);
+    public UserInfo(int id, String name, String email) {
+        this(id, name, email, null, null);
     }
 
-    public UserInfo(String name, String email, String password, Integer salt) {
+    public UserInfo(String name, String email) {
+        this(null, name, email, null, null);
+    }
+
+    public UserInfo(Integer id, String name, String email, String password, Integer salt) {
+        this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
         this.salt = salt;
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     public String getName() {
