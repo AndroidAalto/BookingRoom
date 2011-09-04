@@ -1131,19 +1131,19 @@ public class WeekView extends View {
         if (mSelectedMeetingInfo != null) {
             // If the tap is on an event, launch the "View meeting" view to edit
             // it
-            switchToAddMeetingView();
+            switchToMeetingView();
         } else if (mSelectedMeetingInfo == null && selectedDay == mSelectionDay
                 && selectedHour == mSelectionHour) {
             // If the tap is on an already selected hour slot, then jump to
             // "View meeting"
-            switchToAddMeetingView();
+            switchToMeetingView();
         }
     }
 
     /**
      * @param mSelectedMeetingInfo2 Edit an existing meeting
      */
-    private void switchToAddMeetingView() {
+    private void switchToMeetingView() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.putExtra("day", mSelectionDay);
         intent.putExtra("hour", mSelectionHour);
@@ -1300,7 +1300,7 @@ public class WeekView extends View {
             // If the tap is on an event, launch the "View meeting" view to edit
             // it
         } else if (mSelectedMeetingInfo == null) {
-            switchToAddMeetingView();
+            switchToMeetingView();
         }
     }
 
