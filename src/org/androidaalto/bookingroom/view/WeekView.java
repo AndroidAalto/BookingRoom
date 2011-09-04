@@ -1297,6 +1297,7 @@ public class WeekView extends View {
         if (mSelectedMeetingInfo != null) {
             // If the tap is on an event, launch the "View meeting" view to edit
             // it
+            switchToMeetingView();
         } else if (mSelectedMeetingInfo == null) {
             switchToMeetingView();
         }
