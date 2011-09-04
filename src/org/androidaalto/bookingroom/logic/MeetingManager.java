@@ -37,6 +37,10 @@ import java.util.List;
 public class MeetingManager {
     private static final MeetingInfoValidator validator = new MeetingInfoValidator();
 
+    public static MeetingInfo book(Time start, Time end, String title, String contactName, String contactMail) throws ValidationException {
+        return book(new MeetingInfo(new UserInfo(contactName, contactMail), start, end, title));
+    }
+
     /**
      * Books the meeting.
      * 
@@ -44,7 +48,7 @@ public class MeetingManager {
      * @return The meeting stored.
      * @throws ValidationException When the preconditions fail.
      */
-    public static MeetingInfo book(MeetingInfo meetingInfo) {
+    public static MeetingInfo book(MeetingInfo meetingInfo) throws ValidationException {
         final ValidationResult result = validator.validate(meetingInfo);
         if (result.hasErrors())
             throw new ValidationException(result, "There are validation errors in " + meetingInfo);
