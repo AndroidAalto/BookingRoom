@@ -93,7 +93,7 @@ public class MeetingManager {
                     meeting
                             .getTitle()));
         }
-        Log.d(TAG, "Returning meetings: " + meetingInfos);
+        Log.d(TAG, "Returning meetings : " + meetingInfos);
         return meetingInfos;
     }
 
