@@ -37,17 +37,17 @@ public class MeetingDb {
         try {
             cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE start > ? AND end < ?",
+                            "SELECT id, user_id, title, start, end FROM meeting WHERE start > ? AND end < ?",
                             new String[] {
-                                    "" + from.toMillis(false) / 1000,
-                                    "" + to.toMillis(false) / 1000
+                                    "" + from.toMillis(false),
+                                    "" + to.toMillis(false)
                             });
 
             while (cursor.moveToNext()) {
                 Time startTime = new Time();
-                startTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("start_time")));
+                startTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("start")));
                 Time endTime = new Time();
-                endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end_time")));
+                endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end")));
 
                 Meeting m = new Meeting(
                         cursor.getInt(cursor.getColumnIndexOrThrow("id")),
@@ -135,8 +135,8 @@ public class MeetingDb {
         ContentValues value = new ContentValues();
         value.put("title", meeting.getTitle());
         value.put("user_id", meeting.getUserId());
-        value.put("start", meeting.getStart().toMillis(false) / 1000);
-        value.put("end", meeting.getEnd().toMillis(false) / 1000);
+        value.put("start", meeting.getStart().toMillis(false));
+        value.put("end", meeting.getEnd().toMillis(false));
         final long id = db.insert("meeting", null, value);
         return MeetingDb.get(id);
     }
