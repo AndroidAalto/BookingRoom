@@ -24,6 +24,7 @@ import org.androidaalto.bookingroom.model.User;
 import org.androidaalto.bookingroom.model.db.DataBaseHelper;
 import org.androidaalto.bookingroom.model.db.MeetingDb;
 import org.androidaalto.bookingroom.model.db.UserDb;
+import org.androidaalto.bookingroom.view.WeekView;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import android.util.Log;
 import java.util.List;
 
 public class MainActivity extends Activity {
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     /** Called when the activity is first created. */
     @Override
@@ -51,22 +53,24 @@ public class MainActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        
-        Log.e("DBW", ""+UserDb.getUserCount());
-        Log.e("DBW", ""+MeetingDb.getMeetingCount());
+       
+        Log.d(TAG, ""+UserDb.getUserCount());
+        Log.d(TAG, ""+MeetingDb.getMeetingCount());
         User myUser = UserDb.get("test@test.com");
-        Log.e("DBW", ""+ myUser.getName());
+        if ( myUser != null ) {
+            Log.d(TAG, ""+ myUser.getName());
+        }
         
         Time start = new Time();
-        start.set(26, 8 - 1, 2011); // 0-11 !!
+        start.set(04, 9 - 1, 2011); // Months are 0-11
         Time end = new Time();
-        end.set(30, 8 - 1, 2011); // 0-11 !!
+        end.set(11, 9 - 1, 2011); // Months are 0-11
         
         List<Meeting> meetings = MeetingDb.getMeetings(start, end) ;
         
         if ( meetings.size() > 0 ) {
             for ( Meeting m : meetings) {
-                Log.e("DBW", "Id: " + m.getId() + " Title: " + m.getTitle());
+                Log.d(TAG, "Id: " + m.getId() + " Title: " + m.getTitle());
             }
         }
     }
