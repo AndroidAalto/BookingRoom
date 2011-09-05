@@ -54,7 +54,7 @@ public class MeetingManager {
     public static MeetingInfo book(MeetingInfo meetingInfo) throws ValidationException {
         final ValidationResult result = validator.validate(meetingInfo);
         if (result.hasErrors())
-            throw new ValidationException(result, "There are validation errors in " + meetingInfo);
+            throw new ValidationException(result, "There were validation errors in " + meetingInfo);
         Log.d(TAG, "Booking: " + meetingInfo);
         User user = UserDb.get(meetingInfo.getUser().getEmail());
         if (user == null)
