@@ -84,9 +84,9 @@ public class UserDb {
      */
     public static User get(long id) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
-
+        Cursor cursor = null;
         try {
-            Cursor cursor = db.rawQuery("SELECT * FROM user WHERE id == ? LIMIT 1",
+            cursor = db.rawQuery("SELECT * FROM user WHERE id == ? LIMIT 1",
                     new String[] {
                         "" + id
                     });
@@ -102,6 +102,9 @@ public class UserDb {
             }
             return null;
         } finally {
+            if ( cursor != null ) {
+                cursor.close();
+            }
             db.close();
             DataBaseHelper.getInstance().close();
         }
