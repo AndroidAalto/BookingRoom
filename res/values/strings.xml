@@ -21,6 +21,7 @@
     
     <string name="buttonOK">OK</string>
     <string name="buttonCancel">Cancel</string>
+    <string name="buttonDelete">Delete</string>
     
     <string name="hintTitle">Describe your meeting</string>
     <string name="hintName">Your name</string>

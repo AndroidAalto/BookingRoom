@@ -23,10 +23,12 @@ import org.androidaalto.bookingroom.logic.MeetingManager;
 import org.androidaalto.bookingroom.validation.ObjectError;
 import org.androidaalto.bookingroom.validation.ValidationException;
 import org.androidaalto.bookingroom.validation.ValidationResult;
+import org.androidaalto.bookingroom.view.WeekView;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,7 +39,10 @@ import android.widget.Toast;
 import java.util.List;
 
 public class MeetingActivity extends Activity {
+    
+    private static final String TAG = MeetingActivity.class.getSimpleName();
 
+    public static final String EXTRA_ID = "id";
     public static final String EXTRA_END_TIME = "end";
     public static final String EXTRA_CONTACT_EMAIL = "email";
     public static final String EXTRA_CONTACT_NAME = "name";
@@ -49,7 +54,7 @@ public class MeetingActivity extends Activity {
     EditText titleEdit, nameEdit, emailEdit;
     TimePicker startPicker, endPicker;
     TextView meetingHeader;
-    Button buttonOk, buttonCancel;
+    Button buttonOk, buttonCancel, buttonDelete;
 
     private int day;
     private int month;
@@ -69,12 +74,18 @@ public class MeetingActivity extends Activity {
         emailEdit = (EditText) findViewById(R.id.emailEdit);
         buttonOk = (Button) findViewById(R.id.buttonOK);
         buttonCancel = (Button) findViewById(R.id.buttonCancel);
+        buttonDelete = (Button) findViewById(R.id.buttonDelete);
 
         startPicker.setIs24HourView(true);
         endPicker.setIs24HourView(true);
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
+            // Existing meeting needs to have a title so we use that check to display the delete button
+            if ( extras.getString(EXTRA_TITLE) != null ) {
+                buttonDelete.setVisibility(View.VISIBLE);
+            }
+            
             Time start = new Time();
             // Use full date if we've it. Otherwise, use day and hour
             String startStr = extras.getString(EXTRA_START_TIME);
@@ -157,6 +168,19 @@ public class MeetingActivity extends Activity {
             @Override
             public void onClick(View v) {
                 meetingActivity.finish();
+            }
+        });
+        
+        buttonDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle extras = getIntent().getExtras();
+                Integer i = extras.getInt(EXTRA_ID);
+                if ( i != null ) {
+                    Log.i(TAG, "id is " + i);
+                    MeetingManager.delete(i);
+                    meetingActivity.finish();
+                }
             }
         });
     }

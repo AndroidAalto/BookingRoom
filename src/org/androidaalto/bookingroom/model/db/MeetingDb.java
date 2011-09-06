@@ -140,4 +140,14 @@ public class MeetingDb {
         final long id = db.insert("meeting", null, value);
         return MeetingDb.get(id);
     }
+
+    /**
+     * @param id
+     * @return Number of rows affected
+     */
+    public static int delete(long id) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getWritableDatabase();
+        int result = db.delete("meeting", "id = ?", new String[] { ""+id });
+        return result;
+    }
 }

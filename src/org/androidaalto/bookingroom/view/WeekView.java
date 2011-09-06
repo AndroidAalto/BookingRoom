@@ -1150,6 +1150,8 @@ public class WeekView extends View {
                 intent.putExtra(MeetingActivity.EXTRA_CONTACT_NAME, user.getName());
                 intent.putExtra(MeetingActivity.EXTRA_CONTACT_EMAIL, user.getEmail());
             }
+
+            intent.putExtra(MeetingActivity.EXTRA_ID, mSelectedMeetingInfo.getId());
             intent.putExtra(MeetingActivity.EXTRA_TITLE, mSelectedMeetingInfo.getTitle());
             intent.putExtra(MeetingActivity.EXTRA_START_TIME, mSelectedMeetingInfo.getStart()
                     .format2445());
