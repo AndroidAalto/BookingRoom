@@ -88,10 +88,13 @@ public class MeetingManager {
         List<Meeting> meetings = MeetingDb.getMeetings(from, end);
         List<MeetingInfo> meetingInfos = new ArrayList<MeetingInfo>();
         for (Meeting meeting : meetings) {
-            meetingInfos.add(new MeetingInfo(meeting.getId(), null, meeting.getStart(), meeting
-                    .getEnd(),
-                    meeting
-                            .getTitle()));
+            User user = UserDb.get(meeting.getUserId());
+            meetingInfos.add(new MeetingInfo(
+                    meeting.getId(),
+                    ( user != null ) ? new UserInfo(user.getId(), user.getName(), user.getEmail()) : null,
+                    meeting.getStart(),
+                    meeting.getEnd(),
+                    meeting.getTitle()));
         }
         Log.d(TAG, "Returning meetings: " + meetingInfos);
         return meetingInfos;
