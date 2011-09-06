@@ -285,7 +285,7 @@ public class WeekView extends View implements MeetingEventListener {
         recalc();
 
         loadMeetings(mBaseDate);
-        
+
         MeetingManager.addMeetingEventListener(this);
     }
 
@@ -1148,18 +1148,10 @@ public class WeekView extends View implements MeetingEventListener {
         intent.putExtra(MeetingActivity.EXTRA_START_HOUR, mSelectionHour);
 
         if (mSelectedMeetingInfo != null) {
-            UserInfo user = mSelectedMeetingInfo.getUser();
-            if (user != null) {
-                intent.putExtra(MeetingActivity.EXTRA_CONTACT_NAME, user.getName());
-                intent.putExtra(MeetingActivity.EXTRA_CONTACT_EMAIL, user.getEmail());
-            }
-
+            // TODO: Can this be improved so the MeetingActivity doesn't need to
+            // retrieve the meeting again?. We've all the meeting information
+            // (but not the User).
             intent.putExtra(MeetingActivity.EXTRA_ID, mSelectedMeetingInfo.getId());
-            intent.putExtra(MeetingActivity.EXTRA_TITLE, mSelectedMeetingInfo.getTitle());
-            intent.putExtra(MeetingActivity.EXTRA_START_TIME, mSelectedMeetingInfo.getStart()
-                    .format2445());
-            intent.putExtra(MeetingActivity.EXTRA_END_TIME, mSelectedMeetingInfo.getEnd()
-                    .format2445());
         }
 
         intent.setClassName(mContext, MeetingActivity.class.getName());
