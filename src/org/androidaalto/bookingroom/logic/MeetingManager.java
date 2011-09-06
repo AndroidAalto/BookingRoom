@@ -163,4 +163,12 @@ public class MeetingManager {
             listener.onEditMeeting(meetingId);
         }
     }
+
+    /**
+     * @param meeting
+     */
+    public static void update(MeetingInfo meeting) {
+        // TODO Auto-generated method stub
+        triggerOnEditMeetingEvent(meeting.getId());
+    }
 }

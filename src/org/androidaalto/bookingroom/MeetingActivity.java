@@ -19,11 +19,11 @@
 
 package org.androidaalto.bookingroom;
 
+import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.logic.MeetingManager;
 import org.androidaalto.bookingroom.validation.ObjectError;
 import org.androidaalto.bookingroom.validation.ValidationException;
 import org.androidaalto.bookingroom.validation.ValidationResult;
-import org.androidaalto.bookingroom.view.WeekView;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -39,17 +39,12 @@ import android.widget.Toast;
 import java.util.List;
 
 public class MeetingActivity extends Activity {
-    
+
     private static final String TAG = MeetingActivity.class.getSimpleName();
 
     public static final String EXTRA_ID = "id";
-    public static final String EXTRA_END_TIME = "end";
-    public static final String EXTRA_CONTACT_EMAIL = "email";
-    public static final String EXTRA_CONTACT_NAME = "name";
-    public static final String EXTRA_TITLE = "title";
     public static final String EXTRA_START_HOUR = "hour";
     public static final String EXTRA_DAY = "day";
-    public static final String EXTRA_START_TIME = "start";
 
     EditText titleEdit, nameEdit, emailEdit;
     TimePicker startPicker, endPicker;
@@ -59,6 +54,8 @@ public class MeetingActivity extends Activity {
     private int day;
     private int month;
     private int year;
+
+    private MeetingInfo mMeeting = null;
 
     /** Called when the activity is first created. */
     @Override
@@ -81,50 +78,14 @@ public class MeetingActivity extends Activity {
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            // Existing meeting needs to have a title so we use that check to display the delete button
-            if ( extras.getString(EXTRA_TITLE) != null ) {
-                buttonDelete.setVisibility(View.VISIBLE);
-            }
-            
-            Time start = new Time();
-            // Use full date if we've it. Otherwise, use day and hour
-            String startStr = extras.getString(EXTRA_START_TIME);
-            if (startStr != null) {
-                start.parse(startStr);
+            Long meetingId = extras.getLong(EXTRA_ID);
+            if (meetingId != 0) {
+                // Get the meeting info with its user info.
+                mMeeting  = MeetingManager.getMeeting(meetingId);
+                setValuesForEditing(mMeeting);
             } else {
-                start.setJulianDay(extras.getInt(EXTRA_DAY));
-                start.hour = extras.getInt(EXTRA_START_HOUR);
-                start.minute = 0;
+                setValuesForNew(extras.getInt(EXTRA_DAY), extras.getInt(EXTRA_START_HOUR));
             }
-            day = start.monthDay;
-            month = start.month;
-            year = start.year;
-
-            Time end = new Time();
-            // Use full date if we've it. Otherwise set the end to one hour
-            // after start
-            String endStr = extras.getString(EXTRA_END_TIME);
-            if (endStr != null) {
-                end.parse(endStr);
-            } else {
-                end.setJulianDay(extras.getInt(EXTRA_DAY));
-                end.hour = extras.getInt(EXTRA_START_HOUR) + 1;
-                if (end.hour > 23)
-                    end.hour = 0;
-                end.minute = 0;
-            }
-
-            meetingHeader.setText(meetingHeader.getText() + " - " + start.format("%d/%m/%Y"));
-
-            startPicker.setCurrentHour(start.hour);
-            startPicker.setCurrentMinute(start.minute);
-
-            endPicker.setCurrentHour(end.hour);
-            endPicker.setCurrentMinute(end.minute);
-
-            titleEdit.setText(extras.getString(EXTRA_TITLE));
-            nameEdit.setText(extras.getString(EXTRA_CONTACT_NAME));
-            emailEdit.setText(extras.getString(EXTRA_CONTACT_EMAIL));
         }
 
         final Activity meetingActivity = this;
@@ -148,8 +109,12 @@ public class MeetingActivity extends Activity {
                 }
 
                 try {
-                    MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
-                            .getText().toString(), emailEdit.getText().toString());
+                    if (mMeeting != null) {
+                        MeetingManager.update(mMeeting);
+                    } else {
+                        MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
+                                .getText().toString(), emailEdit.getText().toString());
+                    }
                     // If we reach this point then booking went ok
                     meetingActivity.finish();
                 } catch (ValidationException e) {
@@ -170,18 +135,65 @@ public class MeetingActivity extends Activity {
                 meetingActivity.finish();
             }
         });
-        
+
         buttonDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Bundle extras = getIntent().getExtras();
                 Long i = extras.getLong(EXTRA_ID);
-                if ( i != null ) {
+                if (i != null) {
                     Log.i(TAG, "id is " + i);
                     MeetingManager.delete(i);
                     meetingActivity.finish();
                 }
             }
         });
+    }
+
+    /**
+     * @param int1
+     * @param int2
+     */
+    private void setValuesForNew(int day, int startHour) {
+        Time start = new Time();
+        start.setJulianDay(day);
+        start.hour = startHour;
+        start.minute = 0;
+
+        Time end = new Time();
+        end.setJulianDay(day);
+        end.hour = startHour + 1;
+        if (end.hour > 23)
+            end.hour = 0;
+        end.minute = 0;
+
+        setTimeValues(start, end);
+    }
+
+    private void setTimeValues(Time start, Time end) {
+        meetingHeader.setText(meetingHeader.getText() + " - " + start.format("%d/%m/%Y"));
+
+        startPicker.setCurrentHour(start.hour);
+        startPicker.setCurrentMinute(start.minute);
+
+        endPicker.setCurrentHour(end.hour);
+        endPicker.setCurrentMinute(end.minute);
+
+        day = start.monthDay;
+        month = start.month;
+        year = start.year;
+    }
+
+    /**
+     * @param meetingId
+     */
+    private void setValuesForEditing(MeetingInfo meeting ) {
+        // Existing meeting needs to have a title so we use that check to
+        // display the delete button
+        buttonDelete.setVisibility(View.VISIBLE);
+        setTimeValues(meeting.getStart(), meeting.getEnd());
+        titleEdit.setText(meeting.getTitle());
+        nameEdit.setText(meeting.getUser().getName());
+        emailEdit.setText(meeting.getUser().getEmail());
     }
 }
