@@ -88,10 +88,12 @@ public class MeetingManager {
         List<Meeting> meetings = MeetingDb.getMeetings(from, end);
         List<MeetingInfo> meetingInfos = new ArrayList<MeetingInfo>();
         for (Meeting meeting : meetings) {
-            meetingInfos.add(new MeetingInfo(meeting.getId(), null, meeting.getStart(), meeting
-                    .getEnd(),
-                    meeting
-                            .getTitle()));
+            meetingInfos.add(new MeetingInfo(
+                    meeting.getId(),
+                    null,
+                    meeting.getStart(),
+                    meeting.getEnd(),
+                    meeting.getTitle()));
         }
         Log.d(TAG, "Returning meetings: " + meetingInfos);
         return meetingInfos;
@@ -113,5 +115,19 @@ public class MeetingManager {
                 user.getEmail()), meeting.getStart(),
                 meeting.getEnd(), meeting
                         .getTitle());
+    }
+
+    /**
+     * @param id Meeting id
+     */
+    public static void delete(long id) {
+        // Makes sure that the meeting still exists
+        Meeting meeting = MeetingDb.get(id);
+        if ( meeting != null ) {
+            // Delete
+            int i = MeetingDb.delete(id);
+            Log.d(TAG, "Deleted rows: " + i);
+        }
+        
     }
 }

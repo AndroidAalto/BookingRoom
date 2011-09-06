@@ -177,6 +177,16 @@
             android:text="@string/buttonCancel"
             android:id="@+id/buttonCancel">
         </Button>
-
+        
+        <Button
+            style="@style/sButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/buttonCancel"
+            android:text="@string/buttonDelete"
+            android:id="@+id/buttonDelete"
+            android:textColor="#FF0000"
+            android:visibility="gone">
+        </Button>
     </RelativeLayout>
 </LinearLayout>
