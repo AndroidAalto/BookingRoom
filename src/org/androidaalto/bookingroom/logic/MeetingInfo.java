@@ -99,4 +99,11 @@ public class MeetingInfo {
     public int getEndMinutesSinceMidnight() {
         return endMinutesSinceMidnight;
     }
+
+    @Override
+    public String toString() {
+        return "MeetingInfo [id=" + id + ", start=" + start.format3339(false) + ", end="
+                + end.format3339(false) + ", title=" + title
+                + "]";
+    }
 }

@@ -27,6 +27,7 @@ import org.androidaalto.bookingroom.validation.ValidationException;
 import org.androidaalto.bookingroom.validation.ValidationResult;
 
 import android.text.format.Time;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,7 @@ import java.util.List;
  * @author hannu
  */
 public class MeetingManager {
+    private static final String TAG = "MeetingManager";
     private static final MeetingInfoValidator validator = new MeetingInfoValidator();
 
     public static MeetingInfo book(Time start, Time end, String title, String contactName,
@@ -52,7 +54,8 @@ public class MeetingManager {
     public static MeetingInfo book(MeetingInfo meetingInfo) throws ValidationException {
         final ValidationResult result = validator.validate(meetingInfo);
         if (result.hasErrors())
-            throw new ValidationException(result, "There are validation errors in " + meetingInfo);
+            throw new ValidationException(result, "There were validation errors in " + meetingInfo);
+        Log.d(TAG, "Booking: " + meetingInfo);
         User user = UserDb.get(meetingInfo.getUser().getEmail());
         if (user == null)
             user = UserDb.store(new User(meetingInfo.getUser().getName(), meetingInfo.getUser()
@@ -62,8 +65,11 @@ public class MeetingManager {
                 meetingInfo.getTitle(),
                 meetingInfo.getStart(),
                 meetingInfo.getEnd()));
-        return new MeetingInfo(meeting.getId(), null, meeting.getStart(), meeting.getEnd(),
+        final MeetingInfo booked = new MeetingInfo(meeting.getId(), null, meeting.getStart(),
+                meeting.getEnd(),
                 meeting.getTitle());
+        Log.d(TAG, "Booked: " + booked);
+        return booked;
     }
 
     /**
@@ -87,6 +93,7 @@ public class MeetingManager {
                     meeting
                             .getTitle()));
         }
+        Log.d(TAG, "Returning meetings: " + meetingInfos);
         return meetingInfos;
     }
 
