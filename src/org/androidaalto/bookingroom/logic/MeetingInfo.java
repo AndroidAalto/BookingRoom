@@ -25,7 +25,7 @@ import android.text.format.Time;
  * @author hannu
  */
 public class MeetingInfo {
-    private final Integer id;
+    private final Long id;
     private final UserInfo user;
     private final Time start;
     private final Time end;
@@ -39,7 +39,7 @@ public class MeetingInfo {
         this(null, user, start, end, title);
     }
 
-    public MeetingInfo(Integer id, UserInfo user, Time start, Time end, String title) {
+    public MeetingInfo(Long id, UserInfo user, Time start, Time end, String title) {
         this.id = id;
         this.user = user;
         this.start = start;
@@ -52,7 +52,7 @@ public class MeetingInfo {
         endMinutesSinceMidnight = end.hour * 60 + end.minute;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 

@@ -175,7 +175,7 @@ public class MeetingActivity extends Activity {
             @Override
             public void onClick(View v) {
                 Bundle extras = getIntent().getExtras();
-                Integer i = extras.getInt(EXTRA_ID);
+                Long i = extras.getLong(EXTRA_ID);
                 if ( i != null ) {
                     Log.i(TAG, "id is " + i);
                     MeetingManager.delete(i);
