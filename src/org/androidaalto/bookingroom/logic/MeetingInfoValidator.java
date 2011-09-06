@@ -33,7 +33,8 @@ import java.util.regex.Pattern;
  * @author hannu
  */
 public class MeetingInfoValidator implements Validator<MeetingInfo> {
-    private static final long MAX_START_TIME_INCREASE_IN_MILLIS = 120960000;
+    private static final int MAX_DAYS = 7;
+    private static final long MAX_START_TIME_INCREASE_IN_MILLIS = MAX_DAYS * 24 * 60 * 60 * 1000;
     private static final int MAX_HOURS = 2;
     private static final long MAX_LENGTH_IN_MILLIS = MAX_HOURS * 60 * 60 * 1000;
 
