@@ -30,7 +30,9 @@ import android.text.format.Time;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author hannu
@@ -39,13 +41,16 @@ public class MeetingManager {
     private static final String TAG = "MeetingManager";
     private static final MeetingInfoValidator validator = new MeetingInfoValidator();
 
+    private static Set<MeetingEventListener> listeners = new HashSet<MeetingEventListener>();
+
     public static MeetingInfo book(Time start, Time end, String title, String contactName,
             String contactMail) throws ValidationException {
         return book(new MeetingInfo(new UserInfo(contactName, contactMail), start, end, title));
     }
 
     /**
-     * Books the meeting.
+     * Books the meeting. Synchronously calls <code>onNewMeeting</code> to all
+     * the registered listeners.
      * 
      * @param meetingInfo The meeting to be booked.
      * @return The meeting stored.
@@ -68,6 +73,7 @@ public class MeetingManager {
         final MeetingInfo booked = new MeetingInfo(meeting.getId(), null, meeting.getStart(),
                 meeting.getEnd(),
                 meeting.getTitle());
+        triggerOnNewMeetingEvent(booked.getId());
         Log.d(TAG, "Booked: " + booked);
         return booked;
     }
@@ -111,7 +117,8 @@ public class MeetingManager {
         if (meeting == null)
             return null;
         User user = UserDb.get(meeting.getUserId());
-        return new MeetingInfo(meeting.getId(), new UserInfo(user.getId(), user.getName(),
+        return new MeetingInfo(meeting.getId(), new UserInfo(user.getId(),
+                user.getName(),
                 user.getEmail()), meeting.getStart(),
                 meeting.getEnd(), meeting
                         .getTitle());
@@ -123,11 +130,37 @@ public class MeetingManager {
     public static void delete(long id) {
         // Makes sure that the meeting still exists
         Meeting meeting = MeetingDb.get(id);
-        if ( meeting != null ) {
+        if (meeting != null) {
             // Delete
             int i = MeetingDb.delete(id);
+            triggerOnDeleteMeetingEvent(id);
             Log.d(TAG, "Deleted rows: " + i);
         }
-        
+    }
+
+    public static void addMeetingEventListener(MeetingEventListener listener) {
+        listeners.add(listener);
+    }
+
+    public static void deleteMeetingEventListener(MeetingEventListener listener) {
+        listeners.remove(listener);
+    }
+
+    private static void triggerOnNewMeetingEvent(Long meetingId) {
+        for (MeetingEventListener listener : listeners) {
+            listener.onNewMeeting(meetingId);
+        }
+    }
+
+    private static void triggerOnDeleteMeetingEvent(Long meetingId) {
+        for (MeetingEventListener listener : listeners) {
+            listener.onDeleteMeeting(meetingId);
+        }
+    }
+
+    private static void triggerOnEditMeetingEvent(Long meetingId) {
+        for (MeetingEventListener listener : listeners) {
+            listener.onEditMeeting(meetingId);
+        }
     }
 }

@@ -61,7 +61,7 @@ public class UserDb {
 
             if (cursor.moveToNext()) {
                 return new User(
-                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getLong(cursor.getColumnIndexOrThrow("id")),
                         cursor.getString(cursor.getColumnIndexOrThrow("name")),
                         cursor.getString(cursor.getColumnIndexOrThrow("email")),
                         cursor.getString(cursor.getColumnIndexOrThrow("password")),
@@ -93,7 +93,7 @@ public class UserDb {
 
             if (cursor.moveToNext()) {
                 return new User(
-                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getLong(cursor.getColumnIndexOrThrow("id")),
                         cursor.getString(cursor.getColumnIndexOrThrow("name")),
                         cursor.getString(cursor.getColumnIndexOrThrow("email")),
                         cursor.getString(cursor.getColumnIndexOrThrow("password")),

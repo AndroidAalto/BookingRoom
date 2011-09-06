@@ -23,13 +23,13 @@ package org.androidaalto.bookingroom.logic;
  * @author hannu
  */
 public class UserInfo {
-    private final Integer id;
+    private final Long id;
     private final String name;
     private final String email;
     private final String password;
     private final Integer salt;
 
-    public UserInfo(int id, String name, String email) {
+    public UserInfo(Long id, String name, String email) {
         this(id, name, email, null, null);
     }
 
@@ -37,7 +37,7 @@ public class UserInfo {
         this(null, name, email, null, null);
     }
 
-    public UserInfo(Integer id, String name, String email, String password, Integer salt) {
+    public UserInfo(Long id, String name, String email, String password, Integer salt) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -45,7 +45,7 @@ public class UserInfo {
         this.salt = salt;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 

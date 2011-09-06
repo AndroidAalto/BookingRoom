@@ -25,17 +25,17 @@ import android.text.format.Time;
  * @author hannu
  */
 public class Meeting {
-    private final Integer id;
-    private final int userId;
+    private final Long id;
+    private final Long userId;
     private final Time start;
     private final Time end;
     private final String title;
 
-    public Meeting(int userId, String title, Time start, Time end ) {
+    public Meeting(Long userId, String title, Time start, Time end ) {
         this(null, userId, title, start, end);
     }
 
-    public Meeting(Integer id, int userId, String title, Time start, Time end) {
+    public Meeting(Long id, Long userId, String title, Time start, Time end) {
         this.id = id;
         this.userId = userId;
         this.start = start;
@@ -43,11 +43,11 @@ public class Meeting {
         this.title = title;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public int getUserId() {
+    public Long getUserId() {
         return userId;
     }
 

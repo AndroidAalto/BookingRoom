@@ -24,7 +24,7 @@ package org.androidaalto.bookingroom.model;
  * @author hannu
  */
 public class User {
-    private final Integer id;
+    private final Long id;
     private final String name;
     private final String email;
     private final String password;
@@ -35,7 +35,7 @@ public class User {
         this(null, name, email, null, -1, false);
     }
 
-    public User(Integer id, String name, String email, String password, int salt, boolean admin) {
+    public User(Long id, String name, String email, String password, int salt, boolean admin) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -44,7 +44,7 @@ public class User {
         this.admin = admin;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 

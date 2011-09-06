@@ -50,8 +50,8 @@ public class MeetingDb {
                 endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end")));
 
                 Meeting m = new Meeting(
-                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
-                        cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
+                        cursor.getLong(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getLong(cursor.getColumnIndexOrThrow("user_id")),
                         cursor.getString(cursor.getColumnIndexOrThrow("title")),
                         startTime,
                         endTime
@@ -110,8 +110,8 @@ public class MeetingDb {
                 endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end_time")));
 
                 return new Meeting(
-                        cursor.getInt(cursor.getColumnIndexOrThrow("id")),
-                        cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
+                        cursor.getLong(cursor.getColumnIndexOrThrow("id")),
+                        cursor.getLong(cursor.getColumnIndexOrThrow("user_id")),
                         cursor.getString(cursor.getColumnIndexOrThrow("title")),
                         startTime,
                         endTime);
