@@ -26,6 +26,7 @@ package org.androidaalto.bookingroom.view;
 
 import org.androidaalto.bookingroom.MeetingActivity;
 import org.androidaalto.bookingroom.R;
+import org.androidaalto.bookingroom.logic.MeetingEventListener;
 import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.logic.MeetingManager;
 import org.androidaalto.bookingroom.logic.UserInfo;
@@ -61,7 +62,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class WeekView extends View {
+public class WeekView extends View implements MeetingEventListener {
 
     private static final String TAG = WeekView.class.getSimpleName();
 
@@ -284,6 +285,8 @@ public class WeekView extends View {
         recalc();
 
         loadMeetings(mBaseDate);
+        
+        MeetingManager.addMeetingEventListener(this);
     }
 
     /**
@@ -1458,5 +1461,26 @@ public class WeekView extends View {
         mScrolling = false;
         resetSelectedHour();
         mRedrawScreen = true;
+    }
+
+    @Override
+    public void onNewMeeting(Long meetingId) {
+        reloadMeetings();
+    }
+
+    @Override
+    public void onDeleteMeeting(Long meetingId) {
+        reloadMeetings();
+    }
+
+    @Override
+    public void onEditMeeting(Long meetingId) {
+        reloadMeetings();
+    }
+
+    private void reloadMeetings() {
+        loadMeetings(mBaseDate);
+        mRedrawScreen = true;
+        invalidate();
     }
 }
