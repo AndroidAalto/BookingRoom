@@ -10,8 +10,14 @@
     <color name="calendar_date_banner_text_color">#ff000000</color>
     <color name="week_saturday">#ff757575</color>
     <color name="week_sunday">#ff3333</color>
-    <color name="calendar_event_text_color">#ffffffff</color>
+    <color name="calendar_meeting_text_color">#ffffffff</color>
     <color name="meeting_background_color">#ffffffff</color>
     <color name="calendar_hour_selected">#ffB0B0B0</color>
     <color name="calendar_date_selected">#ffB0B0B0</color>
+    <color name="current_time_marker">#aacababa</color>
+    <color name="current_time_line">#aaff0033</color>
+    <color name="current_time_marker_border">#aaffffff</color>
+    <color name="navigation_text">#ffffffff</color>
+    <color name="navigation_background">#ffB0B0B0</color>
+    <color name="navigation_background_dark">#ff848484</color>
 </resources>

@@ -29,7 +29,6 @@ import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingEventListener;
 import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.logic.MeetingManager;
-import org.androidaalto.bookingroom.logic.UserInfo;
 
 import android.content.Context;
 import android.content.Intent;
@@ -37,6 +36,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Path;
@@ -44,6 +44,7 @@ import android.graphics.Path.Direction;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.text.format.DateUtils;
 import android.text.format.Time;
@@ -52,6 +53,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -80,6 +82,7 @@ public class WeekView extends View implements MeetingEventListener {
     private boolean mRedrawScreen = true;
     private boolean mRemeasure = true;
     private int mBitmapHeight;
+    private int mBitmapWidth;
     private int mGridAreaHeight;
     private int mCellHeight;
     private int mScrollStartY;
@@ -98,9 +101,16 @@ public class WeekView extends View implements MeetingEventListener {
     private Path mPath = new Path();
     private Paint mSelectionPaint = new Paint();
 
+    /**
+     * The first date of the week displayed.
+     */
     Time mBaseDate;
+
     private Time mCurrentTime;
+    private int mTodayJulianDay;
     private int mHoursWidth;
+    private int mNavigationWidth;
+    private int mNavigationTextWidth;
     private int mEventTextAscent;
     private int mEventTextHeight;
     private String[] mHourStrs = {
@@ -111,13 +121,32 @@ public class WeekView extends View implements MeetingEventListener {
     private String[] mDayStrs;
     private String[] mDayStrs2Letter;
     private Resources mResources;
+    /**
+     * The width of this entire view shown (most probable the entire device
+     * screen)
+     */
     private int mViewWidth;
+    /**
+     * The height of this entire view shown (most probable the entire device
+     * screen)
+     */
     private int mViewHeight;
     private int mCellWidth;
     private int mNumDays = 7;
     private int mViewStartX;
+    /**
+     * Stores which pixel in the bitmap y coordinates the view starts.
+     */
     private int mViewStartY;
-    private int mMaxViewStartY;
+
+    /**
+     * The most bottom pixel on the screen
+     */
+    private int mMaxViewY;
+    /**
+     * The most right pixel on the screen.
+     */
+    private int mMaxViewX;
     private int mFirstCell;
     private int mFirstHour = -1;
     private int mFirstHourOffset;
@@ -149,10 +178,17 @@ public class WeekView extends View implements MeetingEventListener {
 
     private static int HOURS_FONT_SIZE = 12;
     private static int NORMAL_FONT_SIZE = 12;
+    private static int BIG_FONT_SIZE = NORMAL_FONT_SIZE * 2;
     private static int EVENT_TEXT_FONT_SIZE = 12;
     private static int MIN_CELL_WIDTH_FOR_TEXT = 27;
+    private static int MIN_NAVIGATION_WIDTH = 54;
     private static float MIN_EVENT_HEIGHT = 15.0F; // in pixels
     private static float SMALL_ROUND_RADIUS = 3.0F;
+    private static float BIG_ROUND_RADIUS = 12.0F;
+
+    private static int CURRENT_TIME_LINE_HEIGHT = 2;
+    private static int CURRENT_TIME_LINE_BORDER_WIDTH = 1;
+    private static int CURRENT_TIME_LINE_SIDE_BUFFER = 1;
 
     /**
      * The initial state of the touch mode when we enter this view.
@@ -214,10 +250,16 @@ public class WeekView extends View implements MeetingEventListener {
     private static int mDateBannerTextColor;
     private static int mSaturdayColor;
     private static int mSundayColor;
-    private static int mEventTextColor;
+    private static int mMeetingTextColor;
     private static int mMeetingBackgroundColor;
     private static int mHourSelectedColor;
     private static int mCalendarDateSelected;
+    private static int mCurrentTimeMarkerColor;
+    private static int mCurrentTimeLineColor;
+    private static int mCurrentTimeMarkerBorderColor;
+    private static int mNavigationBackgroundColor;
+    private static int mNavigationBackgroundDarkColor;
+    private static int mNavigationTextColor;
 
     private float[] mCharWidths = new float[MAX_EVENT_TEXT_LEN];
 
@@ -232,6 +274,11 @@ public class WeekView extends View implements MeetingEventListener {
     private Map<MeetingGeometry, MeetingInfo> mMeetingsGeometryInfoMap = new HashMap<MeetingGeometry, MeetingInfo>();
 
     private Context mContext;
+
+    private String mNextWeekStr;
+    private String mPreviousWeekStr;
+
+    private TextView mTitleTextView;
 
     /**
      * @param context
@@ -278,6 +325,8 @@ public class WeekView extends View implements MeetingEventListener {
 
         initTimeAndDates();
 
+        initNavigationButtons();
+
         initColors();
 
         initDayStrings();
@@ -287,6 +336,25 @@ public class WeekView extends View implements MeetingEventListener {
         loadMeetings(mBaseDate);
 
         MeetingManager.addMeetingEventListener(this);
+    }
+
+    private void initNavigationButtons() {
+        Paint p = mPaint;
+        Rect r = mRect;
+        p.setTextSize(BIG_FONT_SIZE);
+        p.setTextAlign(Paint.Align.CENTER);
+        p.setTypeface(Typeface.DEFAULT_BOLD);
+        p.setAntiAlias(true);
+
+        mNextWeekStr = mResources.getString(R.string.next_week);
+        mPreviousWeekStr = mResources.getString(R.string.previous_week);
+
+        // Use the previous week text to calculate the size
+        p.getTextBounds(mPreviousWeekStr, 0, mPreviousWeekStr.length(), r);
+        // Let's set the width of the navigation button to be two times the
+        // height of the text;
+        mNavigationWidth = r.height() * 2;
+        mNavigationTextWidth = r.width();
     }
 
     /**
@@ -308,6 +376,7 @@ public class WeekView extends View implements MeetingEventListener {
         mCurrentTime = new Time();
         long currentTime = System.currentTimeMillis();
         mCurrentTime.set(currentTime);
+        mTodayJulianDay = Time.getJulianDay(currentTime, mCurrentTime.gmtoff);
 
         mBaseDate = new Time();
         long millis = System.currentTimeMillis();
@@ -324,6 +393,10 @@ public class WeekView extends View implements MeetingEventListener {
         };
         mHoursWidth = computeMaxStringWidth(0, hoursStrs, p);
         mHoursWidth += HOURS_MARGIN;
+
+        // Use the selection hour to set the very first hour to be displayed
+        mSelectionHour = mCurrentTime.hour;
+        initFirstHour();
     }
 
     /**
@@ -378,11 +451,17 @@ public class WeekView extends View implements MeetingEventListener {
         mSaturdayColor = mResources.getColor(R.color.week_saturday);
         mSundayColor = mResources.getColor(R.color.week_sunday);
         mDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
-        mEventTextColor = mResources.getColor(R.color.calendar_event_text_color);
+        mMeetingTextColor = mResources.getColor(R.color.calendar_meeting_text_color);
         mMeetingBackgroundColor = mResources.getColor(R.color.meeting_background_color);
         mHourSelectedColor = mResources.getColor(R.color.calendar_hour_selected);
         mGridAreaSelectedColor = mResources.getColor(R.color.calendar_grid_area_selected);
         mCalendarDateSelected = mResources.getColor(R.color.calendar_date_selected);
+        mCurrentTimeMarkerColor = mResources.getColor(R.color.current_time_marker);
+        mCurrentTimeLineColor = mResources.getColor(R.color.current_time_line);
+        mCurrentTimeMarkerBorderColor = mResources.getColor(R.color.current_time_marker_border);
+        mNavigationTextColor = mResources.getColor(R.color.navigation_text);
+        mNavigationBackgroundColor = mResources.getColor(R.color.navigation_background);
+        mNavigationBackgroundDarkColor = mResources.getColor(R.color.navigation_background_dark);
     }
 
     private void calculateScaleFonts() {
@@ -394,8 +473,14 @@ public class WeekView extends View implements MeetingEventListener {
                 HOURS_FONT_SIZE *= mScale;
                 MIN_CELL_WIDTH_FOR_TEXT *= mScale;
                 MIN_EVENT_HEIGHT *= mScale;
+                MIN_NAVIGATION_WIDTH *= mScale;
 
                 SMALL_ROUND_RADIUS *= mScale;
+                BIG_ROUND_RADIUS *= mScale;
+
+                CURRENT_TIME_LINE_HEIGHT *= mScale;
+                CURRENT_TIME_LINE_BORDER_WIDTH *= mScale;
+                CURRENT_TIME_LINE_SIDE_BUFFER *= mScale;
             }
         }
     }
@@ -451,6 +536,9 @@ public class WeekView extends View implements MeetingEventListener {
     @Override
     protected void onDraw(Canvas viewCanvas) {
         Log.d(TAG, "WeekView.onDraw()");
+
+        clearEntireView(viewCanvas);
+
         if (mRemeasure) {
             remeasure(getWidth(), getHeight());
             mRemeasure = false;
@@ -470,6 +558,20 @@ public class WeekView extends View implements MeetingEventListener {
         drawFixedAreas(viewCanvas);
     }
 
+    private void clearEntireView(Canvas canvas) {
+        Paint p = mPaint;
+        Rect r = mRect;
+
+        r.top = 0;
+        r.bottom = getHeight();
+        r.left = 0;
+        r.right = getWidth();
+        canvas.save();
+        p.setColor(mGridAreaBackgroundColor);
+        canvas.drawRect(r, p);
+        canvas.restore();
+    }
+
     /**
      * @param viewCanvas
      */
@@ -480,6 +582,53 @@ public class WeekView extends View implements MeetingEventListener {
         if (mNumDays > 1) {
             drawDayHeaderLoop(r, canvas, p);
         }
+
+        RectF rf = mRectF;
+        drawNavigationButtons(rf, canvas, p);
+    }
+
+    /**
+     * @param rf
+     * @param canvas
+     * @param p
+     */
+    private void drawNavigationButtons(RectF rf, Canvas canvas, Paint p) {
+        p.setTextSize(BIG_FONT_SIZE);
+        p.setTextAlign(Paint.Align.CENTER);
+        p.setTypeface(Typeface.DEFAULT_BOLD);
+        p.setAntiAlias(true);
+
+        canvas.save();
+        rf.top = 0;
+        rf.bottom = getHeight();
+        rf.left = mMaxViewX - mNavigationWidth;
+        rf.right = mMaxViewX;
+        p.setShader(new LinearGradient(rf.right, 0, rf.left, 0, mNavigationBackgroundDarkColor,
+                mNavigationBackgroundColor, Shader.TileMode.MIRROR));
+        canvas.drawRoundRect(rf, BIG_ROUND_RADIUS, BIG_ROUND_RADIUS, p);
+        p.setShader(null);
+        p.setColor(mNavigationTextColor);
+        canvas.rotate(90);
+        int x = mMaxViewY / 2 - mNavigationTextWidth / 2;
+        int y = -mMaxViewX + (int) (mNavigationWidth * 0.75);
+        canvas.drawText(mNextWeekStr, x, y, p);
+        canvas.restore();
+
+        rf.top = 0;
+        rf.bottom = getHeight();
+        rf.left = 0;
+        rf.right = mNavigationWidth;
+        canvas.save();
+        p.setShader(new LinearGradient(rf.left, 0, rf.right, 0, mNavigationBackgroundDarkColor,
+                mNavigationBackgroundColor, Shader.TileMode.MIRROR));
+        canvas.drawRoundRect(rf, BIG_ROUND_RADIUS, BIG_ROUND_RADIUS, p);
+        p.setShader(null);
+        p.setColor(mNavigationTextColor);
+        canvas.rotate(270);
+        x = -mMaxViewY / 2 + mNavigationTextWidth / 2;
+        y = (int) (mNavigationWidth * 0.75);
+        canvas.drawText(mPreviousWeekStr, x, y, p);
+        canvas.restore();
     }
 
     /**
@@ -498,7 +647,7 @@ public class WeekView extends View implements MeetingEventListener {
                 r.top = 0;
                 r.bottom = mBannerPlusMargin;
                 int daynum = mSelectionDay - mFirstJulianDay;
-                r.left = mHoursWidth + daynum * (mCellWidth + DAY_GAP);
+                r.left = mNavigationWidth + mHoursWidth + daynum * (mCellWidth + DAY_GAP);
                 r.right = r.left + mCellWidth;
                 canvas.drawRect(r, p);
             }
@@ -506,7 +655,7 @@ public class WeekView extends View implements MeetingEventListener {
 
         p.setTextSize(NORMAL_FONT_SIZE);
         p.setTextAlign(Paint.Align.CENTER);
-        int x = mHoursWidth;
+        int x = mNavigationWidth + mHoursWidth;
         int deltaX = mCellWidth + DAY_GAP;
         int cell = mFirstJulianDay;
 
@@ -531,7 +680,7 @@ public class WeekView extends View implements MeetingEventListener {
         r.top = 0;
         r.bottom = mBannerPlusMargin;
         r.left = 0;
-        r.right = mHoursWidth + mNumDays * (mCellWidth + DAY_GAP);
+        r.right = getWidth();// mHoursWidth + mNumDays * (mCellWidth + DAY_GAP);
         canvas.drawRect(r, p);
 
         // Fill the extra space on the right side with the default background
@@ -603,12 +752,12 @@ public class WeekView extends View implements MeetingEventListener {
         src.top = mViewStartY;
         src.bottom = mViewStartY + mGridAreaHeight;
         src.left = 0;
-        src.right = mViewWidth;
+        src.right = mBitmapWidth;
 
         dest.top = mFirstCell;
         dest.bottom = mViewHeight;
-        dest.left = 0;
-        dest.right = mViewWidth;
+        dest.left = mNavigationWidth;
+        dest.right = mViewWidth - mNavigationWidth;
 
         Log.d(TAG, "copying bitmap to screen: ");
         Log.d(TAG, "\ttop: " + src.top);
@@ -650,8 +799,42 @@ public class WeekView extends View implements MeetingEventListener {
         int currentJulianDay = mFirstJulianDay;
         for (int day = 0; day < mNumDays; day++, currentJulianDay++) {
             drawDayMeetings(currentJulianDay, x, HOUR_GAP, canvas, p);
+            if (currentJulianDay == mTodayJulianDay) {
+                // And the current time shows up somewhere on the screen
+                if (lineY >= mViewStartY && lineY < mViewStartY + mViewHeight - 2) {
+                    // draw both the marker and the line
+                    drawCurrentTimeMarker(lineY, canvas, p);
+                    drawCurrentTimeLine(r, x, lineY, canvas, p);
+                }
+            }
             x += deltaX;
         }
+    }
+
+    private void drawCurrentTimeMarker(int top, Canvas canvas, Paint p) {
+        Rect r = new Rect();
+        r.top = top - CURRENT_TIME_LINE_HEIGHT / 2;
+        r.bottom = top + CURRENT_TIME_LINE_HEIGHT / 2;
+        r.left = 0;
+        r.right = mHoursWidth;
+
+        p.setColor(mCurrentTimeMarkerColor);
+        canvas.drawRect(r, p);
+    }
+
+    private void drawCurrentTimeLine(Rect r, int left, int top, Canvas canvas, Paint p) {
+        // Do a white outline so it'll show up on a red event
+        p.setColor(mCurrentTimeMarkerBorderColor);
+        r.top = top - CURRENT_TIME_LINE_HEIGHT / 2 - CURRENT_TIME_LINE_BORDER_WIDTH;
+        r.bottom = top + CURRENT_TIME_LINE_HEIGHT / 2 + CURRENT_TIME_LINE_BORDER_WIDTH;
+        r.left = left + CURRENT_TIME_LINE_SIDE_BUFFER;
+        r.right = r.left + mCellWidth - 2 * CURRENT_TIME_LINE_SIDE_BUFFER;
+        canvas.drawRect(r, p);
+        // Then draw the red line
+        p.setColor(mCurrentTimeLineColor);
+        r.top = top - CURRENT_TIME_LINE_HEIGHT / 2;
+        r.bottom = top + CURRENT_TIME_LINE_HEIGHT / 2;
+        canvas.drawRect(r, p);
     }
 
     /**
@@ -684,16 +867,16 @@ public class WeekView extends View implements MeetingEventListener {
      * @param meeting
      * @param canvas
      * @param p
-     * @param eventTextPaint
+     * @param meetingTextPaint
      * @return
      */
     private RectF drawMeetingRect(MeetingGeometry geometry, Canvas canvas, Paint p,
-            Paint eventTextPaint) {
+            Paint meetingTextPaint) {
         int color = mMeetingBackgroundColor;
 
         // TODO: If this event is selected, then use the selection color
         p.setColor(color);
-        eventTextPaint.setColor(mEventTextColor);
+        meetingTextPaint.setColor(mMeetingTextColor);
 
         RectF rf = mRectF;
         rf.top = geometry.top;
@@ -948,14 +1131,10 @@ public class WeekView extends View implements MeetingEventListener {
         canvas.drawRect(r, p);
     }
 
-    /**
-     * @param width
-     * @param height
-     */
     private void remeasure(int width, int height) {
         mGridAreaHeight = height - mFirstCell;
         mCellHeight = (mGridAreaHeight - ((mNumHours + 1) * HOUR_GAP)) / mNumHours;
-        Log.d(TAG, "maxViewStartY: " + mMaxViewStartY);
+        Log.d(TAG, "maxViewStartY: " + mMaxViewY);
 
         int usedGridAreaHeight = (mCellHeight + HOUR_GAP) * mNumHours + HOUR_GAP;
         int bottomSpace = mGridAreaHeight - usedGridAreaHeight;
@@ -964,7 +1143,8 @@ public class WeekView extends View implements MeetingEventListener {
         mFirstCell = mBannerPlusMargin;
 
         createOffscreenBitmapAndCanvas(width, bottomSpace);
-        mMaxViewStartY = mBitmapHeight - mGridAreaHeight;
+        mMaxViewY = mBitmapHeight - mGridAreaHeight;
+        mMaxViewX = width;
 
         if (mFirstHour == -1) {
             initFirstHour();
@@ -977,13 +1157,15 @@ public class WeekView extends View implements MeetingEventListener {
     private void createOffscreenBitmapAndCanvas(int width, int bottomSpace) {
         // Create an off-screen bitmap that we can draw into.
         mBitmapHeight = HOUR_GAP + 24 * (mCellHeight + HOUR_GAP) + bottomSpace;
+        mBitmapWidth = width - 2 * mNavigationWidth;
         if ((mOffscreenBitmap == null || mOffscreenBitmap.getHeight() < mBitmapHeight) && width > 0
                 &&
                 mBitmapHeight > 0) {
             if (mOffscreenBitmap != null) {
                 mOffscreenBitmap.recycle();
             }
-            mOffscreenBitmap = Bitmap.createBitmap(width, mBitmapHeight, Bitmap.Config.RGB_565);
+            mOffscreenBitmap = Bitmap.createBitmap(mBitmapWidth, mBitmapHeight,
+                    Bitmap.Config.RGB_565);
             mOffscreenCanvas = new Canvas(mOffscreenBitmap);
         }
     }
@@ -1001,7 +1183,7 @@ public class WeekView extends View implements MeetingEventListener {
     protected void onSizeChanged(int width, int height, int oldw, int oldh) {
         mViewWidth = width;
         mViewHeight = height;
-        int gridAreaWidth = width - mHoursWidth;
+        int gridAreaWidth = mViewWidth - 2 * mNavigationWidth;
         mCellWidth = (gridAreaWidth - (mNumDays * DAY_GAP)) / mNumDays;
 
         Paint p = new Paint();
@@ -1122,6 +1304,7 @@ public class WeekView extends View implements MeetingEventListener {
 
         boolean validPosition = setSelectionFromPosition(x, y);
         if (!validPosition) {
+            switchWeek(x, y);
             // return if the touch wasn't on an area of concern
             return;
         }
@@ -1140,6 +1323,54 @@ public class WeekView extends View implements MeetingEventListener {
             // "View meeting"
             switchToMeetingView();
         }
+    }
+
+    private void switchWeek(int x, int y) {
+        if (x < mNavigationWidth) {
+            switchToPreviousWeek();
+        } else if (x > (mMaxViewX - mNavigationWidth)) {
+            switchToNextWeek();
+        }
+    }
+
+    private void switchToNextWeek() {
+        Time date = mBaseDate;
+        date.set(mBaseDate);
+        date.monthDay += mNumDays;
+        date.normalize(true /* ignore isDst */);
+
+        restartView();
+    }
+
+    private void switchToPreviousWeek() {
+        Time date = mBaseDate;
+        date.set(mBaseDate);
+        date.monthDay -= mNumDays;
+        date.normalize(true /* ignore isDst */);
+
+        restartView();
+    }
+
+    private void restartView() {
+        mSelectedMeetings.clear();
+        mComputeSelectedMeeting = true;
+        remeasure(getWidth(), getHeight());
+
+        mSelectedMeetingInfo = null;
+        mSelectedMeetingGeometry = null;
+
+        // Redraw the screen so that the selection box will be redrawn. We may
+        // have scrolled to a different part of the day in some other view
+        // so the selection box in this view may no longer be visible.
+        mRedrawScreen = true;
+
+        if (mTitleTextView != null) {
+            mTitleTextView.setText("Week " + mBaseDate.getWeekNumber() + " - "
+                    + mBaseDate.format("%m %Y"));
+        }
+        recalc();
+        reloadMeetings();
+        invalidate();
     }
 
     private void switchToMeetingView() {
@@ -1168,7 +1399,7 @@ public class WeekView extends View implements MeetingEventListener {
      * @return true if the touch position is valid
      */
     private boolean setSelectionFromPosition(int x, int y) {
-        if (x < mHoursWidth) {
+        if (x < (mHoursWidth + mNavigationWidth) || x > (mViewWidth - mNavigationWidth)) {
             return false;
         }
 
@@ -1360,8 +1591,8 @@ public class WeekView extends View implements MeetingEventListener {
             mViewStartY = mScrollStartY + distanceY;
             if (mViewStartY < 0) {
                 mViewStartY = 0;
-            } else if (mViewStartY > mMaxViewStartY) {
-                mViewStartY = mMaxViewStartY;
+            } else if (mViewStartY > mMaxViewY) {
+                mViewStartY = mMaxViewY;
             }
             computeFirstHour();
         }
@@ -1428,8 +1659,8 @@ public class WeekView extends View implements MeetingEventListener {
         mViewStartY += amount;
         if (mViewStartY < 0)
             mViewStartY = 0;
-        else if (mViewStartY > mMaxViewStartY)
-            mViewStartY = mMaxViewStartY;
+        else if (mViewStartY > mMaxViewY)
+            mViewStartY = mMaxViewY;
     }
 
     /**
@@ -1443,7 +1674,7 @@ public class WeekView extends View implements MeetingEventListener {
      * @return
      */
     public int getMaxViewStartY() {
-        return mMaxViewStartY;
+        return mMaxViewY;
     }
 
     /**
@@ -1474,5 +1705,42 @@ public class WeekView extends View implements MeetingEventListener {
         loadMeetings(mBaseDate);
         mRedrawScreen = true;
         invalidate();
+    }
+
+    public void setSelectedDay(Time time) {
+        mBaseDate.set(time);
+        mSelectionHour = mBaseDate.hour;
+        mSelectedMeetingGeometry = null;
+        mSelectedMeetingInfo = null;
+        long millis = mBaseDate.toMillis(false /* use isDst */);
+        mSelectionDay = Time.getJulianDay(millis, mBaseDate.gmtoff);
+        mSelectedMeetings.clear();
+        mComputeSelectedMeeting = true;
+
+        // Force a recalculation of the first visible hour
+        mFirstHour = -1;
+
+        // Force a redraw of the selection box.
+        mSelectionMode = SELECTION_SELECTED;
+        mRedrawScreen = true;
+        mRemeasure = true;
+        restartView();
+    }
+
+    public Time getBaseDate() {
+        return mBaseDate;
+    }
+
+    public int getNumDays() {
+        return mNumDays;
+    }
+
+    /**
+     * @param title
+     */
+    public void setTitleTextView(TextView title) {
+        mTitleTextView = title;
+        mTitleTextView.setText("Week " + mBaseDate.getWeekNumber() + " - "
+                + mBaseDate.format("%m/%Y"));
     }
 }

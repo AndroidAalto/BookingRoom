@@ -4,8 +4,22 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="?android:attr/windowTitleSize"
+        style="?android:attr/windowTitleBackgroundStyle">
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:gravity="center"
+            style="?android:attr/windowTitleStyle"
+            android:background="@null"
+            android:fadingEdge="horizontal" />
+    </RelativeLayout>
     <view
         class="org.androidaalto.bookingroom.view.WeekView"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:id="@+id/weekView" />
 </LinearLayout>
