@@ -36,6 +36,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Path;
@@ -43,6 +44,7 @@ import android.graphics.Path.Direction;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.text.format.DateUtils;
 import android.text.format.Time;
@@ -181,6 +183,7 @@ public class WeekView extends View implements MeetingEventListener {
     private static int MIN_NAVIGATION_WIDTH = 54;
     private static float MIN_EVENT_HEIGHT = 15.0F; // in pixels
     private static float SMALL_ROUND_RADIUS = 3.0F;
+    private static float BIG_ROUND_RADIUS = 12.0F;
 
     private static int CURRENT_TIME_LINE_HEIGHT = 2;
     private static int CURRENT_TIME_LINE_BORDER_WIDTH = 1;
@@ -254,6 +257,7 @@ public class WeekView extends View implements MeetingEventListener {
     private static int mCurrentTimeLineColor;
     private static int mCurrentTimeMarkerBorderColor;
     private static int mNavigationBackgroundColor;
+    private static int mNavigationBackgroundDarkColor;
     private static int mNavigationTextColor;
 
     private float[] mCharWidths = new float[MAX_EVENT_TEXT_LEN];
@@ -272,8 +276,6 @@ public class WeekView extends View implements MeetingEventListener {
 
     private String mNextWeekStr;
     private String mPreviousWeekStr;
-
-
 
     /**
      * @param context
@@ -456,6 +458,7 @@ public class WeekView extends View implements MeetingEventListener {
         mCurrentTimeMarkerBorderColor = mResources.getColor(R.color.current_time_marker_border);
         mNavigationTextColor = mResources.getColor(R.color.navigation_text);
         mNavigationBackgroundColor = mResources.getColor(R.color.navigation_background);
+        mNavigationBackgroundDarkColor = mResources.getColor(R.color.navigation_background_dark);
     }
 
     private void calculateScaleFonts() {
@@ -470,6 +473,7 @@ public class WeekView extends View implements MeetingEventListener {
                 MIN_NAVIGATION_WIDTH *= mScale;
 
                 SMALL_ROUND_RADIUS *= mScale;
+                BIG_ROUND_RADIUS *= mScale;
 
                 CURRENT_TIME_LINE_HEIGHT *= mScale;
                 CURRENT_TIME_LINE_BORDER_WIDTH *= mScale;
@@ -529,6 +533,9 @@ public class WeekView extends View implements MeetingEventListener {
     @Override
     protected void onDraw(Canvas viewCanvas) {
         Log.d(TAG, "WeekView.onDraw()");
+
+        clearEntireView(viewCanvas);
+
         if (mRemeasure) {
             remeasure(getWidth(), getHeight());
             mRemeasure = false;
@@ -548,6 +555,20 @@ public class WeekView extends View implements MeetingEventListener {
         drawFixedAreas(viewCanvas);
     }
 
+    private void clearEntireView(Canvas canvas) {
+        Paint p = mPaint;
+        Rect r = mRect;
+        
+        r.top = 0;
+        r.bottom = getHeight();
+        r.left = 0;
+        r.right = getWidth();
+        canvas.save();
+        p.setColor(mGridAreaBackgroundColor);
+        canvas.drawRect(r, p);
+        canvas.restore();
+    }
+
     /**
      * @param viewCanvas
      */
@@ -559,27 +580,30 @@ public class WeekView extends View implements MeetingEventListener {
             drawDayHeaderLoop(r, canvas, p);
         }
 
-        drawNavigationButtons(r, canvas, p);
+        RectF rf = mRectF;
+        drawNavigationButtons(rf, canvas, p);
     }
 
     /**
-     * @param r
+     * @param rf
      * @param canvas
      * @param p
      */
-    private void drawNavigationButtons(Rect r, Canvas canvas, Paint p) {
+    private void drawNavigationButtons(RectF rf, Canvas canvas, Paint p) {
         p.setTextSize(BIG_FONT_SIZE);
         p.setTextAlign(Paint.Align.CENTER);
         p.setTypeface(Typeface.DEFAULT_BOLD);
         p.setAntiAlias(true);
 
         canvas.save();
-        r.top = 0;
-        r.bottom = mMaxViewY;
-        r.left = mMaxViewX - mNavigationWidth;
-        r.right = mMaxViewX;
-        p.setColor(mNavigationBackgroundColor);
-        canvas.drawRect(r, p);
+        rf.top = 0;
+        rf.bottom = getHeight();
+        rf.left = mMaxViewX - mNavigationWidth;
+        rf.right = mMaxViewX;
+        p.setShader(new LinearGradient(rf.right, 0, rf.left, 0, mNavigationBackgroundDarkColor,
+                mNavigationBackgroundColor, Shader.TileMode.MIRROR));
+        canvas.drawRoundRect(rf, BIG_ROUND_RADIUS, BIG_ROUND_RADIUS, p);
+        p.setShader(null);
         p.setColor(mNavigationTextColor);
         canvas.rotate(90);
         int x = mMaxViewY / 2 - mNavigationTextWidth / 2;
@@ -587,13 +611,15 @@ public class WeekView extends View implements MeetingEventListener {
         canvas.drawText(mNextWeekStr, x, y, p);
         canvas.restore();
 
-        r.top = 0;
-        r.bottom = mMaxViewY;
-        r.left = 0;
-        r.right = mNavigationWidth;
+        rf.top = 0;
+        rf.bottom = getHeight();
+        rf.left = 0;
+        rf.right = mNavigationWidth;
         canvas.save();
-        p.setColor(mNavigationBackgroundColor);
-        canvas.drawRect(r, p);
+        p.setShader(new LinearGradient(rf.left, 0, rf.right, 0, mNavigationBackgroundDarkColor,
+                mNavigationBackgroundColor, Shader.TileMode.MIRROR));
+        canvas.drawRoundRect(rf, BIG_ROUND_RADIUS, BIG_ROUND_RADIUS, p);
+        p.setShader(null);
         p.setColor(mNavigationTextColor);
         canvas.rotate(270);
         x = -mMaxViewY / 2 + mNavigationTextWidth / 2;
@@ -650,8 +676,8 @@ public class WeekView extends View implements MeetingEventListener {
         p.setColor(mDateBannerBackgroundColor);
         r.top = 0;
         r.bottom = mBannerPlusMargin;
-        r.left = mNavigationWidth;
-        r.right = r.left + mHoursWidth + mNumDays * (mCellWidth + DAY_GAP);
+        r.left = 0;
+        r.right = getWidth();// mHoursWidth + mNumDays * (mCellWidth + DAY_GAP);
         canvas.drawRect(r, p);
 
         // Fill the extra space on the right side with the default background

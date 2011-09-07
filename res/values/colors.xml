@@ -19,4 +19,5 @@
     <color name="current_time_marker_border">#aaffffff</color>
     <color name="navigation_text">#ffffffff</color>
     <color name="navigation_background">#ffB0B0B0</color>
+    <color name="navigation_background_dark">#ff848484</color>
 </resources>
