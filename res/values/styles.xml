@@ -31,4 +31,7 @@
         <item name="android:paddingRight">20dip</item>
     </style>
     
+    <style name="CalendarTheme" parent="android:Theme.Light.NoTitleBar.Fullscreen">
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
 </resources>

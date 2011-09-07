@@ -53,6 +53,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -276,6 +277,8 @@ public class WeekView extends View implements MeetingEventListener {
 
     private String mNextWeekStr;
     private String mPreviousWeekStr;
+
+    private TextView mTitleTextView;
 
     /**
      * @param context
@@ -558,7 +561,7 @@ public class WeekView extends View implements MeetingEventListener {
     private void clearEntireView(Canvas canvas) {
         Paint p = mPaint;
         Rect r = mRect;
-        
+
         r.top = 0;
         r.bottom = getHeight();
         r.left = 0;
@@ -1360,6 +1363,11 @@ public class WeekView extends View implements MeetingEventListener {
         // have scrolled to a different part of the day in some other view
         // so the selection box in this view may no longer be visible.
         mRedrawScreen = true;
+
+        if (mTitleTextView != null) {
+            mTitleTextView.setText("Week " + mBaseDate.getWeekNumber() + " - "
+                    + mBaseDate.format("%m %Y"));
+        }
         recalc();
         reloadMeetings();
         invalidate();
@@ -1717,5 +1725,22 @@ public class WeekView extends View implements MeetingEventListener {
         mRedrawScreen = true;
         mRemeasure = true;
         restartView();
+    }
+
+    public Time getBaseDate() {
+        return mBaseDate;
+    }
+
+    public int getNumDays() {
+        return mNumDays;
+    }
+
+    /**
+     * @param title
+     */
+    public void setTitleTextView(TextView title) {
+        mTitleTextView = title;
+        mTitleTextView.setText("Week " + mBaseDate.getWeekNumber() + " - "
+                + mBaseDate.format("%m/%Y"));
     }
 }

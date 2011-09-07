@@ -33,11 +33,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import java.util.List;
 
 public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
+    private TextView title;
+    private WeekView currentView;
 
     /** Called when the activity is first created. */
     @Override
@@ -45,6 +48,10 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         DataBaseHelper.setContext(this.getBaseContext());
         setContentView(R.layout.main);
+
+        title = (TextView) findViewById(R.id.title);
+        currentView = (WeekView) findViewById(R.id.weekView);
+        currentView.setTitleTextView(title);
     }
 
     @Override
@@ -89,7 +96,7 @@ public class MainActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.goToday:
-                WeekView currentView = (WeekView) findViewById(R.id.weekView);
+
                 Time now = new Time();
                 now.setToNow();
                 now.normalize(true);
