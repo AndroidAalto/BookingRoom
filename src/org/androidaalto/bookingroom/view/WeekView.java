@@ -246,13 +246,15 @@ public class WeekView extends View implements MeetingEventListener {
     private static int mDateBannerTextColor;
     private static int mSaturdayColor;
     private static int mSundayColor;
-    private static int mEventTextColor;
+    private static int mMeetingTextColor;
     private static int mMeetingBackgroundColor;
     private static int mHourSelectedColor;
     private static int mCalendarDateSelected;
     private static int mCurrentTimeMarkerColor;
     private static int mCurrentTimeLineColor;
     private static int mCurrentTimeMarkerBorderColor;
+    private static int mNavigationBackgroundColor;
+    private static int mNavigationTextColor;
 
     private float[] mCharWidths = new float[MAX_EVENT_TEXT_LEN];
 
@@ -270,6 +272,8 @@ public class WeekView extends View implements MeetingEventListener {
 
     private String mNextWeekStr;
     private String mPreviousWeekStr;
+
+
 
     /**
      * @param context
@@ -442,7 +446,7 @@ public class WeekView extends View implements MeetingEventListener {
         mSaturdayColor = mResources.getColor(R.color.week_saturday);
         mSundayColor = mResources.getColor(R.color.week_sunday);
         mDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
-        mEventTextColor = mResources.getColor(R.color.calendar_event_text_color);
+        mMeetingTextColor = mResources.getColor(R.color.calendar_meeting_text_color);
         mMeetingBackgroundColor = mResources.getColor(R.color.meeting_background_color);
         mHourSelectedColor = mResources.getColor(R.color.calendar_hour_selected);
         mGridAreaSelectedColor = mResources.getColor(R.color.calendar_grid_area_selected);
@@ -450,6 +454,8 @@ public class WeekView extends View implements MeetingEventListener {
         mCurrentTimeMarkerColor = mResources.getColor(R.color.current_time_marker);
         mCurrentTimeLineColor = mResources.getColor(R.color.current_time_line);
         mCurrentTimeMarkerBorderColor = mResources.getColor(R.color.current_time_marker_border);
+        mNavigationTextColor = mResources.getColor(R.color.navigation_text);
+        mNavigationBackgroundColor = mResources.getColor(R.color.navigation_background);
     }
 
     private void calculateScaleFonts() {
@@ -567,14 +573,14 @@ public class WeekView extends View implements MeetingEventListener {
         p.setTypeface(Typeface.DEFAULT_BOLD);
         p.setAntiAlias(true);
 
+        canvas.save();
         r.top = 0;
         r.bottom = mMaxViewY;
         r.left = mMaxViewX - mNavigationWidth;
         r.right = mMaxViewX;
-        canvas.save();
-        p.setColor(mCalendarDateSelected);
+        p.setColor(mNavigationBackgroundColor);
         canvas.drawRect(r, p);
-        p.setColor(mMeetingBackgroundColor);
+        p.setColor(mNavigationTextColor);
         canvas.rotate(90);
         int x = mMaxViewY / 2 - mNavigationTextWidth / 2;
         int y = -mMaxViewX + (int) (mNavigationWidth * 0.75);
@@ -586,9 +592,9 @@ public class WeekView extends View implements MeetingEventListener {
         r.left = 0;
         r.right = mNavigationWidth;
         canvas.save();
-        p.setColor(mCalendarDateSelected);
+        p.setColor(mNavigationBackgroundColor);
         canvas.drawRect(r, p);
-        p.setColor(mMeetingBackgroundColor);
+        p.setColor(mNavigationTextColor);
         canvas.rotate(270);
         x = -mMaxViewY / 2 + mNavigationTextWidth / 2;
         y = (int) (mNavigationWidth * 0.75);
@@ -832,16 +838,16 @@ public class WeekView extends View implements MeetingEventListener {
      * @param meeting
      * @param canvas
      * @param p
-     * @param eventTextPaint
+     * @param meetingTextPaint
      * @return
      */
     private RectF drawMeetingRect(MeetingGeometry geometry, Canvas canvas, Paint p,
-            Paint eventTextPaint) {
+            Paint meetingTextPaint) {
         int color = mMeetingBackgroundColor;
 
         // TODO: If this event is selected, then use the selection color
         p.setColor(color);
-        eventTextPaint.setColor(mEventTextColor);
+        meetingTextPaint.setColor(mMeetingTextColor);
 
         RectF rf = mRectF;
         rf.top = geometry.top;
