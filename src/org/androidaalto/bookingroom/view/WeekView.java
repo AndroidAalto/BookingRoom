@@ -104,6 +104,7 @@ public class WeekView extends View implements MeetingEventListener {
     Time mBaseDate;
 
     private Time mCurrentTime;
+    private int mTodayJulianDay;
     private int mHoursWidth;
     private int mNavigationWidth;
     private int mNavigationTextWidth;
@@ -181,6 +182,10 @@ public class WeekView extends View implements MeetingEventListener {
     private static float MIN_EVENT_HEIGHT = 15.0F; // in pixels
     private static float SMALL_ROUND_RADIUS = 3.0F;
 
+    private static int CURRENT_TIME_LINE_HEIGHT = 2;
+    private static int CURRENT_TIME_LINE_BORDER_WIDTH = 1;
+    private static int CURRENT_TIME_LINE_SIDE_BUFFER = 1;
+
     /**
      * The initial state of the touch mode when we enter this view.
      */
@@ -245,6 +250,9 @@ public class WeekView extends View implements MeetingEventListener {
     private static int mMeetingBackgroundColor;
     private static int mHourSelectedColor;
     private static int mCalendarDateSelected;
+    private static int mCurrentTimeMarkerColor;
+    private static int mCurrentTimeLineColor;
+    private static int mCurrentTimeMarkerBorderColor;
 
     private float[] mCharWidths = new float[MAX_EVENT_TEXT_LEN];
 
@@ -359,6 +367,7 @@ public class WeekView extends View implements MeetingEventListener {
         mCurrentTime = new Time();
         long currentTime = System.currentTimeMillis();
         mCurrentTime.set(currentTime);
+        mTodayJulianDay = Time.getJulianDay(currentTime, mCurrentTime.gmtoff);
 
         mBaseDate = new Time();
         long millis = System.currentTimeMillis();
@@ -438,6 +447,9 @@ public class WeekView extends View implements MeetingEventListener {
         mHourSelectedColor = mResources.getColor(R.color.calendar_hour_selected);
         mGridAreaSelectedColor = mResources.getColor(R.color.calendar_grid_area_selected);
         mCalendarDateSelected = mResources.getColor(R.color.calendar_date_selected);
+        mCurrentTimeMarkerColor = mResources.getColor(R.color.current_time_marker);
+        mCurrentTimeLineColor = mResources.getColor(R.color.current_time_line);
+        mCurrentTimeMarkerBorderColor = mResources.getColor(R.color.current_time_marker_border);
     }
 
     private void calculateScaleFonts() {
@@ -452,6 +464,10 @@ public class WeekView extends View implements MeetingEventListener {
                 MIN_NAVIGATION_WIDTH *= mScale;
 
                 SMALL_ROUND_RADIUS *= mScale;
+
+                CURRENT_TIME_LINE_HEIGHT *= mScale;
+                CURRENT_TIME_LINE_BORDER_WIDTH *= mScale;
+                CURRENT_TIME_LINE_SIDE_BUFFER *= mScale;
             }
         }
     }
@@ -748,8 +764,42 @@ public class WeekView extends View implements MeetingEventListener {
         int currentJulianDay = mFirstJulianDay;
         for (int day = 0; day < mNumDays; day++, currentJulianDay++) {
             drawDayMeetings(currentJulianDay, x, HOUR_GAP, canvas, p);
+            if (currentJulianDay == mTodayJulianDay) {
+                // And the current time shows up somewhere on the screen
+                if (lineY >= mViewStartY && lineY < mViewStartY + mViewHeight - 2) {
+                    // draw both the marker and the line
+                    drawCurrentTimeMarker(lineY, canvas, p);
+                    drawCurrentTimeLine(r, x, lineY, canvas, p);
+                }
+            }
             x += deltaX;
         }
+    }
+
+    private void drawCurrentTimeMarker(int top, Canvas canvas, Paint p) {
+        Rect r = new Rect();
+        r.top = top - CURRENT_TIME_LINE_HEIGHT / 2;
+        r.bottom = top + CURRENT_TIME_LINE_HEIGHT / 2;
+        r.left = 0;
+        r.right = mHoursWidth;
+
+        p.setColor(mCurrentTimeMarkerColor);
+        canvas.drawRect(r, p);
+    }
+
+    private void drawCurrentTimeLine(Rect r, int left, int top, Canvas canvas, Paint p) {
+        // Do a white outline so it'll show up on a red event
+        p.setColor(mCurrentTimeMarkerBorderColor);
+        r.top = top - CURRENT_TIME_LINE_HEIGHT / 2 - CURRENT_TIME_LINE_BORDER_WIDTH;
+        r.bottom = top + CURRENT_TIME_LINE_HEIGHT / 2 + CURRENT_TIME_LINE_BORDER_WIDTH;
+        r.left = left + CURRENT_TIME_LINE_SIDE_BUFFER;
+        r.right = r.left + mCellWidth - 2 * CURRENT_TIME_LINE_SIDE_BUFFER;
+        canvas.drawRect(r, p);
+        // Then draw the red line
+        p.setColor(mCurrentTimeLineColor);
+        r.top = top - CURRENT_TIME_LINE_HEIGHT / 2;
+        r.bottom = top + CURRENT_TIME_LINE_HEIGHT / 2;
+        canvas.drawRect(r, p);
     }
 
     /**
