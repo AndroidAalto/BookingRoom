@@ -375,6 +375,10 @@ public class WeekView extends View implements MeetingEventListener {
         };
         mHoursWidth = computeMaxStringWidth(0, hoursStrs, p);
         mHoursWidth += HOURS_MARGIN;
+
+        // Use the selection hour to set the very first hour to be displayed
+        mSelectionHour = mCurrentTime.hour;
+        initFirstHour();
     }
 
     /**
