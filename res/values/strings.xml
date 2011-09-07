@@ -28,4 +28,5 @@
     <string name="hintEmail">Your email address</string>
     <string name="next_week">Next week</string>
     <string name="previous_week">Previous week</string>
+    <string name="go_to_today">Go to today</string>
 </resources>

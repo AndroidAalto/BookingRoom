@@ -30,6 +30,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import java.util.List;
 
@@ -43,35 +46,56 @@ public class MainActivity extends Activity {
         DataBaseHelper.setContext(this.getBaseContext());
         setContentView(R.layout.main);
     }
-    
+
     @Override
     public void onPause() {
         super.onPause();
         DataBaseHelper.getInstance().close();
     }
-    
+
     @Override
     public void onResume() {
         super.onResume();
-       
-        Log.d(TAG, ""+UserDb.getUserCount());
-        Log.d(TAG, ""+MeetingDb.getMeetingCount());
+
+        Log.d(TAG, "" + UserDb.getUserCount());
+        Log.d(TAG, "" + MeetingDb.getMeetingCount());
         User myUser = UserDb.get("test@test.com");
-        if ( myUser != null ) {
-            Log.d(TAG, ""+ myUser.getName());
+        if (myUser != null) {
+            Log.d(TAG, "" + myUser.getName());
         }
-        
+
         Time start = new Time();
         start.set(04, 9 - 1, 2011); // Months are 0-11
         Time end = new Time();
         end.set(11, 9 - 1, 2011); // Months are 0-11
-        
-        List<Meeting> meetings = MeetingDb.getMeetings(start, end) ;
-        
-        if ( meetings.size() > 0 ) {
-            for ( Meeting m : meetings) {
+
+        List<Meeting> meetings = MeetingDb.getMeetings(start, end);
+
+        if (meetings.size() > 0) {
+            for (Meeting m : meetings) {
                 Log.d(TAG, "Id: " + m.getId() + " Title: " + m.getTitle());
             }
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.week_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.goToday:
+                WeekView currentView = (WeekView) findViewById(R.id.weekView);
+                Time now = new Time();
+                now.setToNow();
+                now.normalize(true);
+                currentView.setSelectedDay(now);
+                break;
+        }
+        return false;
     }
 }

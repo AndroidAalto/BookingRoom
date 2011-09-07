@@ -1330,6 +1330,7 @@ public class WeekView extends View implements MeetingEventListener {
         mRedrawScreen = true;
         recalc();
         reloadMeetings();
+        invalidate();
     }
 
     private void switchToMeetingView() {
@@ -1664,5 +1665,25 @@ public class WeekView extends View implements MeetingEventListener {
         loadMeetings(mBaseDate);
         mRedrawScreen = true;
         invalidate();
+    }
+
+    public void setSelectedDay(Time time) {
+        mBaseDate.set(time);
+        mSelectionHour = mBaseDate.hour;
+        mSelectedMeetingGeometry = null;
+        mSelectedMeetingInfo = null;
+        long millis = mBaseDate.toMillis(false /* use isDst */);
+        mSelectionDay = Time.getJulianDay(millis, mBaseDate.gmtoff);
+        mSelectedMeetings.clear();
+        mComputeSelectedMeeting = true;
+
+        // Force a recalculation of the first visible hour
+        mFirstHour = -1;
+
+        // Force a redraw of the selection box.
+        mSelectionMode = SELECTION_SELECTED;
+        mRedrawScreen = true;
+        mRemeasure = true;
+        restartView();
     }
 }
