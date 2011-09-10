@@ -30,17 +30,19 @@ public class Meeting {
     private final Time start;
     private final Time end;
     private final String title;
+    private final int pincode;
 
-    public Meeting(Long userId, String title, Time start, Time end ) {
-        this(null, userId, title, start, end);
+    public Meeting(Long userId, String title, Time start, Time end, int pincode) {
+        this(null, userId, title, start, end, pincode);
     }
 
-    public Meeting(Long id, Long userId, String title, Time start, Time end) {
+    public Meeting(Long id, Long userId, String title, Time start, Time end, int pincode) {
         this.id = id;
         this.userId = userId;
         this.start = start;
         this.end = end;
         this.title = title;
+        this.pincode = pincode;
     }
 
     public Long getId() {
@@ -61,5 +63,9 @@ public class Meeting {
 
     public String getTitle() {
         return title;
+    }
+    
+    public int getPin() {
+        return pincode;
     }
 }

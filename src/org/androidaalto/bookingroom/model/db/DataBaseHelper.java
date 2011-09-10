@@ -41,7 +41,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                     "user_id INTEGER," +
                     "title VARCHAR("+ R.string.max_meeting_title_length +")," +
                     "start TIMESTAMP," +
-                    "end TIMESTAMP)";
+                    "end TIMESTAMP," +
+                    "pincode INTEGER default 0000)";
 
     private static final String CREATE_USER_SQL =
             "CREATE TABLE user(" +

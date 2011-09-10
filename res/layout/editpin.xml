@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="300dip"
+    android:layout_height="wrap_content"
+    android:padding="20dip">
+
+    <EditText
+        android:id="@+id/pincode"
+        android:layout_width="fill_parent"
+        android:layout_centerHorizontal="true"
+        android:layout_height="wrap_content"
+        android:phoneNumber="true"
+        android:hint="Pin code" />
+
+    <Button
+        android:id="@+id/pinButtonOk"
+        android:layout_centerHorizontal="true"
+        android:layout_width="100dip"
+        android:layout_height="wrap_content"
+        android:text="OK"
+        android:layout_below="@+id/pincode" />
+
+    <Button
+        android:id="@+id/pinButtonCancel"
+        android:layout_centerHorizontal="true"
+        android:layout_width="120dip"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pincode"
+        android:layout_toRightOf="@+id/pinButtonOk"
+        android:text="Cancel" />
+
+</RelativeLayout>

@@ -34,17 +34,19 @@ public class MeetingInfo {
     private int endDay;
     private int startMinutesSinceMidnight;
     private int endMinutesSinceMidnight;
+    private int pincode;
 
-    public MeetingInfo(UserInfo user, Time start, Time end, String title) {
-        this(null, user, start, end, title);
+    public MeetingInfo(UserInfo user, Time start, Time end, String title, int pincode) {
+        this(null, user, start, end, title, pincode);
     }
 
-    public MeetingInfo(Long id, UserInfo user, Time start, Time end, String title) {
+    public MeetingInfo(Long id, UserInfo user, Time start, Time end, String title, int pincode) {
         this.id = id;
         this.user = user;
         this.start = start;
         this.end = end;
         this.title = title;
+        this.pincode = pincode;
 
         startDay = Time.getJulianDay(start.normalize(true), start.gmtoff);
         startMinutesSinceMidnight = start.hour * 60 + start.minute;
@@ -105,5 +107,9 @@ public class MeetingInfo {
         return "MeetingInfo [id=" + id + ", start=" + start.format3339(false) + ", end="
                 + end.format3339(false) + ", title=" + title
                 + "]";
+    }
+    
+    public int getPin() {
+        return pincode;
     }
 }
