@@ -53,6 +53,8 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -1352,6 +1354,9 @@ public class WeekView extends View implements MeetingEventListener {
     }
 
     private void restartView() {
+        Animation myFadeInAnimation = AnimationUtils.loadAnimation(mContext, R.anim.fadein);
+        startAnimation(myFadeInAnimation);
+
         mSelectedMeetings.clear();
         mComputeSelectedMeeting = true;
         remeasure(getWidth(), getHeight());
