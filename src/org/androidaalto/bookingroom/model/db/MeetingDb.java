@@ -37,7 +37,7 @@ public class MeetingDb {
         try {
             cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, title, start, end FROM meeting WHERE start > ? AND end < ?",
+                            "SELECT id, user_id, pincode, title, start, end FROM meeting WHERE start > ? AND end < ?",
                             new String[] {
                                     "" + from.toMillis(false),
                                     "" + to.toMillis(false)
@@ -54,7 +54,8 @@ public class MeetingDb {
                         cursor.getLong(cursor.getColumnIndexOrThrow("user_id")),
                         cursor.getString(cursor.getColumnIndexOrThrow("title")),
                         startTime,
-                        endTime
+                        endTime,
+                        cursor.getInt(cursor.getColumnIndexOrThrow("pincode"))
                         );
                 records.add(m);
             }
@@ -98,7 +99,7 @@ public class MeetingDb {
         try {
             cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, title, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE id == ? LIMIT 1",
+                            "SELECT id, user_id, title, pincode, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE id == ? LIMIT 1",
                             new String[] {
                                 "" + id
                             });
@@ -114,7 +115,8 @@ public class MeetingDb {
                         cursor.getLong(cursor.getColumnIndexOrThrow("user_id")),
                         cursor.getString(cursor.getColumnIndexOrThrow("title")),
                         startTime,
-                        endTime);
+                        endTime,
+                        cursor.getInt(cursor.getColumnIndexOrThrow("pincode")));
             }
             return null;
         } finally {
@@ -137,6 +139,7 @@ public class MeetingDb {
         value.put("user_id", meeting.getUserId());
         value.put("start", meeting.getStart().toMillis(false));
         value.put("end", meeting.getEnd().toMillis(false));
+        value.put("pincode", meeting.getPin());
         final long id = db.insert("meeting", null, value);
         return MeetingDb.get(id);
     }

@@ -32,6 +32,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -45,7 +46,7 @@ public class MeetingManager {
 
     public static MeetingInfo book(Time start, Time end, String title, String contactName,
             String contactMail) throws ValidationException {
-        return book(new MeetingInfo(new UserInfo(contactName, contactMail), start, end, title));
+        return book(new MeetingInfo(new UserInfo(contactName, contactMail), start, end, title, generatePin()));
     }
 
     /**
@@ -69,10 +70,10 @@ public class MeetingManager {
                 user.getId(),
                 meetingInfo.getTitle(),
                 meetingInfo.getStart(),
-                meetingInfo.getEnd()));
+                meetingInfo.getEnd(), meetingInfo.getPin()));
         final MeetingInfo booked = new MeetingInfo(meeting.getId(), null, meeting.getStart(),
                 meeting.getEnd(),
-                meeting.getTitle());
+                meeting.getTitle(), meeting.getPin());
         triggerOnNewMeetingEvent(booked.getId());
         Log.d(TAG, "Booked: " + booked);
         return booked;
@@ -99,7 +100,7 @@ public class MeetingManager {
                     null,
                     meeting.getStart(),
                     meeting.getEnd(),
-                    meeting.getTitle()));
+                    meeting.getTitle(), meeting.getPin()));
         }
         Log.d(TAG, "Returning meetings: " + meetingInfos);
         return meetingInfos;
@@ -121,7 +122,7 @@ public class MeetingManager {
                 user.getName(),
                 user.getEmail()), meeting.getStart(),
                 meeting.getEnd(), meeting
-                        .getTitle());
+                        .getTitle(), meeting.getPin());
     }
 
     /**
@@ -171,4 +172,15 @@ public class MeetingManager {
         // TODO Auto-generated method stub
         triggerOnEditMeetingEvent(meeting.getId());
     }
+    
+    /*
+     * Generate random pin from 1000 to 9999
+     */
+    private static int generatePin() {
+        Random rand = new Random();
+        int r = rand.nextInt(9000) + 1000;
+        Log.d(TAG, "My rand " + r);
+        return r;
+    }
+
 }

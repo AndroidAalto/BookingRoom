@@ -1383,6 +1383,7 @@ public class WeekView extends View implements MeetingEventListener {
             // retrieve the meeting again?. We've all the meeting information
             // (but not the User).
             intent.putExtra(MeetingActivity.EXTRA_ID, mSelectedMeetingInfo.getId());
+            intent.putExtra(MeetingActivity.EXTRA_PIN, mSelectedMeetingInfo.getPin());
         }
 
         intent.setClassName(mContext, MeetingActivity.class.getName());

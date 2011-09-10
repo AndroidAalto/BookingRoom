@@ -26,6 +26,9 @@ import org.androidaalto.bookingroom.validation.ValidationException;
 import org.androidaalto.bookingroom.validation.ValidationResult;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
@@ -45,8 +48,11 @@ public class MeetingActivity extends Activity {
     public static final String EXTRA_ID = "id";
     public static final String EXTRA_START_HOUR = "hour";
     public static final String EXTRA_DAY = "day";
+    public static final String EXTRA_PIN = "pincode";
 
-    EditText titleEdit, nameEdit, emailEdit;
+    AlertDialog.Builder alertDialog = null;
+    Dialog dialog = null;
+    EditText titleEdit, nameEdit, emailEdit, pinText;
     TimePicker startPicker, endPicker;
     TextView meetingHeader;
     Button buttonOk, buttonCancel, buttonDelete;
@@ -87,7 +93,7 @@ public class MeetingActivity extends Activity {
                 setValuesForNew(extras.getInt(EXTRA_DAY), extras.getInt(EXTRA_START_HOUR));
             }
         }
-
+        alertDialog = new AlertDialog.Builder(this);
         final Activity meetingActivity = this;
         buttonOk.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,11 +118,21 @@ public class MeetingActivity extends Activity {
                     if (mMeeting != null) {
                         MeetingManager.update(mMeeting);
                     } else {
-                        MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
+                        MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
                                 .getText().toString(), emailEdit.getText().toString());
+
+                        alertDialog.setTitle("Booking PIN code");
+                        alertDialog.setMessage("Please don't forget to use the following pin code if you want to cancel this meeting: " + myMI.getPin());
+                        alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() { 
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // If we reach this point then booking went ok
+                                meetingActivity.finish();
+                            }
+                        });
+                        alertDialog.show();
                     }
-                    // If we reach this point then booking went ok
-                    meetingActivity.finish();
+
                 } catch (ValidationException e) {
                     // Initially set a generic error message
                     String errorMessage = "Please check all the fields!";
@@ -139,15 +155,54 @@ public class MeetingActivity extends Activity {
         buttonDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Bundle extras = getIntent().getExtras();
-                Long i = extras.getLong(EXTRA_ID);
-                if (i != null) {
-                    Log.i(TAG, "id is " + i);
-                    MeetingManager.delete(i);
-                    meetingActivity.finish();
-                }
+                popup();
+              
             }
         });
+        
+    }
+
+    private void popup() {
+        dialog = new Dialog(MeetingActivity.this);
+        dialog.setContentView(R.layout.editpin);
+        dialog.setTitle("Introduce your pin code");
+        dialog.setCancelable(true);
+        dialog.show();
+
+        Button pinButtonOk = (Button) dialog.findViewById(R.id.pinButtonOk);
+        pinText = (EditText) dialog.findViewById(R.id.pincode);
+        
+        pinButtonOk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Boolean check = checkPin(pinText.getText().toString());
+                if ( check ) {
+                    Bundle extras = getIntent().getExtras();
+                    Long i = extras.getLong(EXTRA_ID);
+                    if (i != null) {
+                        Log.i(TAG, "id is " + i);
+                        MeetingManager.delete(i);
+                    }
+                    Toast toast = Toast.makeText(getApplicationContext(), "Meeting deleted", Toast.LENGTH_SHORT);
+                    toast.show();
+                    finish();
+                } else {
+                    Toast toast = Toast.makeText(getApplicationContext(), "Wrong pin", Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+                dialog.dismiss();
+            }
+        });
+        
+        Button pinButtonCancel = (Button) dialog.findViewById(R.id.pinButtonCancel);
+        pinButtonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
     }
 
     /**
@@ -195,5 +250,13 @@ public class MeetingActivity extends Activity {
         titleEdit.setText(meeting.getTitle());
         nameEdit.setText(meeting.getUser().getName());
         emailEdit.setText(meeting.getUser().getEmail());
+    }
+    
+    private boolean checkPin(String userPin) {
+        Bundle extras = getIntent().getExtras();
+        Integer meetingId = extras.getInt(EXTRA_PIN);
+        Log.d(TAG, "User pin code: " + userPin.toString() + " Pin code: " + meetingId.toString());
+        
+        return ( userPin.equals(meetingId.toString() ) ) ? true : false;
     }
 }
