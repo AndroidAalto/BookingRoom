@@ -99,16 +99,16 @@ public class MeetingDb {
         try {
             cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, title, pincode, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE id == ? LIMIT 1",
+                            "SELECT id, user_id, title, pincode, start, end FROM meeting WHERE id == ? LIMIT 1",
                             new String[] {
                                 "" + id
                             });
 
             if (cursor.moveToNext()) {
                 Time startTime = new Time();
-                startTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("start_time")));
+                startTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("start")));
                 Time endTime = new Time();
-                endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end_time")));
+                endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end")));
 
                 return new Meeting(
                         cursor.getLong(cursor.getColumnIndexOrThrow("id")),
