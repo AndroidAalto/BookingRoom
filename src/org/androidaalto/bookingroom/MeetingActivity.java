@@ -246,6 +246,7 @@ public class MeetingActivity extends Activity {
         // Existing meeting needs to have a title so we use that check to
         // display the delete button
         buttonDelete.setVisibility(View.VISIBLE);
+        buttonOk.setText("Edit");
         setTimeValues(meeting.getStart(), meeting.getEnd());
         titleEdit.setText(meeting.getTitle());
         nameEdit.setText(meeting.getUser().getName());

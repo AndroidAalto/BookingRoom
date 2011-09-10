@@ -99,16 +99,16 @@ public class MeetingDb {
         try {
             cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, title, pincode, (strftime('%s', start) * 1000) AS start_time, (strftime('%s', end) * 1000) AS end_time FROM meeting WHERE id == ? LIMIT 1",
+                            "SELECT id, user_id, title, pincode, start, end FROM meeting WHERE id == ? LIMIT 1",
                             new String[] {
                                 "" + id
                             });
 
             if (cursor.moveToNext()) {
                 Time startTime = new Time();
-                startTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("start_time")));
+                startTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("start")));
                 Time endTime = new Time();
-                endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end_time")));
+                endTime.set(cursor.getLong(cursor.getColumnIndexOrThrow("end")));
 
                 return new Meeting(
                         cursor.getLong(cursor.getColumnIndexOrThrow("id")),
@@ -142,6 +142,18 @@ public class MeetingDb {
         value.put("pincode", meeting.getPin());
         final long id = db.insert("meeting", null, value);
         return MeetingDb.get(id);
+    }
+
+    public static Meeting update(Meeting meeting) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getWritableDatabase();
+
+        ContentValues value = new ContentValues();
+        value.put("title", meeting.getTitle());
+        value.put("start", meeting.getStart().toMillis(false));
+        value.put("end", meeting.getEnd().toMillis(false));
+
+        db.update("meeting", value, "id = ?", new String[] { "" + meeting.getId() });
+        return MeetingDb.get(meeting.getId());
     }
 
     /**
