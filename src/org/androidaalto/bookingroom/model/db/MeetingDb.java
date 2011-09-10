@@ -144,6 +144,18 @@ public class MeetingDb {
         return MeetingDb.get(id);
     }
 
+    public static Meeting update(Meeting meeting) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getWritableDatabase();
+
+        ContentValues value = new ContentValues();
+        value.put("title", meeting.getTitle());
+        value.put("start", meeting.getStart().toMillis(false));
+        value.put("end", meeting.getEnd().toMillis(false));
+
+        db.update("meeting", value, "id = ?", new String[] { "" + meeting.getId() });
+        return MeetingDb.get(meeting.getId());
+    }
+
     /**
      * @param id
      * @return Number of rows affected
