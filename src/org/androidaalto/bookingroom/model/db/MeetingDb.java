@@ -19,6 +19,7 @@
 
 package org.androidaalto.bookingroom.model.db;
 
+import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.model.Meeting;
 
 import android.content.ContentValues;
@@ -37,8 +38,10 @@ public class MeetingDb {
         try {
             cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, pincode, title, start, end FROM meeting WHERE start > ? AND end < ?",
+                            "SELECT id, user_id, pincode, title, start, end FROM meeting WHERE start >= ? AND end <= ? OR end > ? AND start < ?",
                             new String[] {
+                                    "" + from.toMillis(false),
+                                    "" + to.toMillis(false),
                                     "" + from.toMillis(false),
                                     "" + to.toMillis(false)
                             });
@@ -144,7 +147,7 @@ public class MeetingDb {
         return MeetingDb.get(id);
     }
 
-    public static Meeting update(Meeting meeting) {
+    public static Meeting update(MeetingInfo meeting) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getWritableDatabase();
 
         ContentValues value = new ContentValues();

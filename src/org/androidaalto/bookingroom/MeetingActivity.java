@@ -21,6 +21,7 @@ package org.androidaalto.bookingroom;
 
 import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.logic.MeetingManager;
+import org.androidaalto.bookingroom.logic.UserInfo;
 import org.androidaalto.bookingroom.validation.ObjectError;
 import org.androidaalto.bookingroom.validation.ValidationException;
 import org.androidaalto.bookingroom.validation.ValidationResult;
@@ -116,7 +117,18 @@ public class MeetingActivity extends Activity {
 
                 try {
                     if (mMeeting != null) {
-                        MeetingManager.update(mMeeting);
+                        UserInfo updateUser = new UserInfo((long) mMeeting.getUser().getId(), nameEdit.getText().toString(), emailEdit.getText().toString());
+                        MeetingInfo updateMI = new MeetingInfo(
+                                mMeeting.getId(),
+                                updateUser,
+                                start,
+                                end,
+                                titleEdit.getText().toString(),
+                                mMeeting.getPin());
+                        MeetingManager.update(updateMI);
+                        Toast toast = Toast.makeText(getApplicationContext(), "Meeting updated", Toast.LENGTH_SHORT);
+                        toast.show();
+                        finish();
                     } else {
                         MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
                                 .getText().toString(), emailEdit.getText().toString());
