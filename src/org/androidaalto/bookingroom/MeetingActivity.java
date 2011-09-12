@@ -121,8 +121,8 @@ public class MeetingActivity extends Activity {
                         MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
                                 .getText().toString(), emailEdit.getText().toString());
 
-                        alertDialog.setTitle("Booking PIN code");
-                        alertDialog.setMessage("Please don't forget to use the following pin code if you want to cancel this meeting: " + myMI.getPin());
+                        alertDialog.setTitle("Booking PIN code: " + myMI.getPin());
+                        alertDialog.setMessage("Please don't forget the PIN code if you want to cancel this meeting.");
                         alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() { 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {

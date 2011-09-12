@@ -4,4 +4,8 @@
         android:id="@+id/goToday"
         android:icon="@android:drawable/ic_menu_today"
         android:title="@string/go_to_today"></item>
+    <!--  Temporary entry to test screensaver -->
+    <item
+        android:id="@+id/goScreensaver"
+        android:title="Screensaver"></item>
 </menu>
