@@ -19,6 +19,7 @@
 
 package org.androidaalto.bookingroom.logic;
 
+import org.androidaalto.bookingroom.model.Meeting;
 import org.androidaalto.bookingroom.model.db.MeetingDb;
 import org.androidaalto.bookingroom.validation.FieldError;
 import org.androidaalto.bookingroom.validation.ObjectError;
@@ -27,6 +28,7 @@ import org.androidaalto.bookingroom.validation.Validator;
 
 import android.text.format.Time;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -81,8 +83,14 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
             errors.addError(new ObjectError(userInfo, "mail", "Contact mail is invalid"));
         }
 
-        if (!MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd()).isEmpty())
+
+        List<Meeting> meetings = MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd());
+
+        // Logic updated to allow meeting editions
+        if ( meetings.size() > 1 || (meetings.size() == 1 && meetingInfo.getId() != meetings.get(0).getId()) ) {
             errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
+        }
+
         return errors;
     }
 }

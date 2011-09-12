@@ -19,6 +19,7 @@
 
 package org.androidaalto.bookingroom.model.db;
 
+import org.androidaalto.bookingroom.logic.UserInfo;
 import org.androidaalto.bookingroom.model.User;
 
 import android.content.ContentValues;
@@ -122,5 +123,19 @@ public class UserDb {
         value.put("is_admin", user.isAdmin());
         db.insert("user", null, value);
         return UserDb.get(user.getEmail());
+    }
+
+    /**
+     * @param user
+     * @return
+     */
+    public static User update(UserInfo user) {
+        SQLiteDatabase db = DataBaseHelper.getInstance().getWritableDatabase();
+        ContentValues value = new ContentValues();
+        value.put("name", user.getName());
+        value.put("email", user.getEmail());
+
+        db.update("user", value, "id = ?", new String[] { "" + user.getId() });
+        return UserDb.get(user.getId());
     }
 }

@@ -168,9 +168,15 @@ public class MeetingManager {
     /**
      * @param meeting
      */
-    public static void update(MeetingInfo meeting) {
-        // TODO Auto-generated method stub
-        triggerOnEditMeetingEvent(meeting.getId());
+    public static void update(MeetingInfo meetingInfo) throws ValidationException {
+        final ValidationResult result = validator.validate(meetingInfo);
+        if (result.hasErrors())
+            throw new ValidationException(result, "There were validation errors in " + meetingInfo);
+
+        UserDb.update(meetingInfo.getUser());
+        MeetingDb.update(meetingInfo);
+
+        triggerOnEditMeetingEvent(meetingInfo.getId());
     }
     
     /*
