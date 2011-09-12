@@ -42,6 +42,7 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private TextView title;
     private WeekView currentView;
+    private Runnable screensaverLauncher;
 
     /** Called when the activity is first created. */
     @Override
@@ -53,6 +54,7 @@ public class MainActivity extends Activity {
         title = (TextView) findViewById(R.id.title);
         currentView = (WeekView) findViewById(R.id.weekView);
         currentView.setTitleTextView(title);
+        screensaverLauncher = new ScreensaverLauncher(this);
     }
 
     @Override
@@ -108,5 +110,23 @@ public class MainActivity extends Activity {
                 break;
         }
         return false;
+    }
+
+    public Runnable getScreensaverLauncher() {
+        return screensaverLauncher;
+    }
+
+    private static final class ScreensaverLauncher implements Runnable {
+        private final MainActivity mainActivity;
+
+        public ScreensaverLauncher(MainActivity mainActivity) {
+            this.mainActivity = mainActivity;
+        }
+
+        @Override
+        public void run() {
+            Log.d(TAG, "Starting screen saver!");
+            mainActivity.startActivity(new Intent(mainActivity, Screensaver.class));
+        }
     }
 }
