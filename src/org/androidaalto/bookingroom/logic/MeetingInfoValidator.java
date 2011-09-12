@@ -95,11 +95,13 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
             errors.addError(new FieldError(userInfo, "mail", "invalid", "Contact mail is invalid"));
         }
 
-
-        List<Meeting> meetings = MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd());
+        List<Meeting> meetings = MeetingDb
+                .getMeetings(meetingInfo.getStart(), meetingInfo.getEnd());
 
         // Logic updated to allow meeting editions
-        if ( meetings.size() > 1 || (meetings.size() == 1 && meetingInfo.getId() != meetings.get(0).getId()) ) {
+        if (meetings.size() > 1
+                || (meetings.size() == 1 && meetingInfo.getId() != null && meetingInfo.getId()
+                        .equals(meetings.get(0).getId()))) {
             errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
         }
 
