@@ -27,6 +27,7 @@ import org.androidaalto.bookingroom.model.db.UserDb;
 import org.androidaalto.bookingroom.view.WeekView;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
@@ -101,6 +102,9 @@ public class MainActivity extends Activity {
                 now.setToNow();
                 now.normalize(true);
                 currentView.setSelectedDay(now);
+                break;
+            case R.id.goScreensaver:
+                startActivity(new Intent(this, Screensaver.class));
                 break;
         }
         return false;
