@@ -388,10 +388,7 @@ public class WeekView extends View implements MeetingEventListener {
     private void initTimeAndDates() {
         mStartDay = Utils.getFirstDayOfWeek();
 
-        mCurrentTime = new Time();
-        long currentTime = System.currentTimeMillis();
-        mCurrentTime.set(currentTime);
-        mTodayJulianDay = Time.getJulianDay(currentTime, mCurrentTime.gmtoff);
+        resetCurrentTime();
 
         mBaseDate = new Time();
         long millis = System.currentTimeMillis();
@@ -412,6 +409,13 @@ public class WeekView extends View implements MeetingEventListener {
         // Use the selection hour to set the very first hour to be displayed
         mSelectionHour = mCurrentTime.hour;
         initFirstHour();
+    }
+
+    private void resetCurrentTime() {
+        mCurrentTime = new Time();
+        long currentTime = System.currentTimeMillis();
+        mCurrentTime.set(currentTime);
+        mTodayJulianDay = Time.getJulianDay(currentTime, mCurrentTime.gmtoff);
     }
 
     /**
@@ -796,6 +800,11 @@ public class WeekView extends View implements MeetingEventListener {
      */
     private void drawFullWeekView(Canvas canvas) {
         Log.d(TAG, "BEGIN: Drawing full week");
+
+        // Every time there's a full draw update the current time so we draw the
+        // marker at the right place
+        resetCurrentTime();
+
         Paint p = mPaint;
         Rect r = mRect;
         int lineY = mCurrentTime.hour * (mCellHeight + HOUR_GAP)
@@ -880,14 +889,14 @@ public class WeekView extends View implements MeetingEventListener {
             }
 
             mMeetingsGeometryInfoMap.put(geometry, meeting);
-            RectF rf = null;
-            if (meeting.getEnd().toMillis(false) < System.currentTimeMillis()) {
+
+            int backgroundColor = mMeetingBackgroundColor;
+            if (meeting.getEnd().before(mCurrentTime)) {
                 // Past events with a different color a la Google Calendar
-                rf = drawMeetingRect(geometry, canvas, p, eventTextPaint,
-                        mMeetingBackgroundColorPastEvent);
-            } else {
-                rf = drawMeetingRect(geometry, canvas, p, eventTextPaint, mMeetingBackgroundColor);
+                backgroundColor = mMeetingBackgroundColorPastEvent;
             }
+
+            RectF rf = drawMeetingRect(geometry, canvas, p, eventTextPaint, backgroundColor);
             drawMeetingText(meeting, rf, canvas, eventTextPaint, NORMAL_TEXT_TOP_MARGIN);
         }
     }
