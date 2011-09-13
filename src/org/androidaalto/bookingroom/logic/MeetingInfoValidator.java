@@ -98,11 +98,19 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
         List<Meeting> meetings = MeetingDb
                 .getMeetings(meetingInfo.getStart(), meetingInfo.getEnd());
 
-        // Logic updated to allow meeting editions
-        if (meetings.size() > 1
-                || (meetings.size() == 1 && meetingInfo.getId() != null && !meetingInfo.getId()
-                        .equals(meetings.get(0).getId()))) {
+        // If there are more than one meeting in that time slot then for sure is
+        // an error. The same meeting can't be returned twice from the model
+        // layer
+        if (meetings.size() > 1) {
             errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
+        } else if (meetings.size() == 1) {
+            // In case the current meeting is a new one (it doesn't have id) or
+            // if it has it is different than the one returned by the model
+            // layer
+            if (meetingInfo.getId() == null || !meetingInfo.getId()
+                    .equals(meetings.get(0).getId())) {
+                errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
+            }
         }
 
         return errors;
