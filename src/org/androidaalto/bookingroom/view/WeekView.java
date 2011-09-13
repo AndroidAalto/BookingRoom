@@ -24,6 +24,7 @@
 
 package org.androidaalto.bookingroom.view;
 
+import org.androidaalto.bookingroom.MainActivity;
 import org.androidaalto.bookingroom.MeetingActivity;
 import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingEventListener;
@@ -46,6 +47,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
+import android.os.Parcelable;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.AttributeSet;
@@ -69,6 +71,7 @@ import java.util.regex.Pattern;
 public class WeekView extends View implements MeetingEventListener {
 
     private static final String TAG = WeekView.class.getSimpleName();
+    private static final int SCREEN_SAVER_DELAY_MILLIS = 5000;
 
     static private class DayHeader {
         int cell;
@@ -339,6 +342,15 @@ public class WeekView extends View implements MeetingEventListener {
         loadMeetings(mBaseDate);
 
         MeetingManager.addMeetingEventListener(this);
+    }
+
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility == View.VISIBLE)
+            postDelayed(((MainActivity) mContext).getScreensaverLauncher(), SCREEN_SAVER_DELAY_MILLIS);
+        else
+            removeCallbacks(((MainActivity) mContext).getScreensaverLauncher());
     }
 
     private void initNavigationButtons() {
@@ -1228,6 +1240,8 @@ public class WeekView extends View implements MeetingEventListener {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+        removeCallbacks(((MainActivity) mContext).getScreensaverLauncher());
+        postDelayed(((MainActivity) mContext).getScreensaverLauncher(), SCREEN_SAVER_DELAY_MILLIS);
         int action = ev.getAction();
 
         switch (action) {

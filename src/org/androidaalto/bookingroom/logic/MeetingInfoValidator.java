@@ -40,9 +40,21 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
     private static final int MAX_HOURS = 2;
     private static final long MAX_LENGTH_IN_MILLIS = MAX_HOURS * 60 * 60 * 1000;
 
-    // If we really want to use regular expressions then we should use this one:
-    // http://www.ex-parrot.com/pdw/Mail-RFC822-Address.html
-    private static final Pattern pattern = Pattern.compile(".+@.+\\.[a-z]+");
+    private static String ATOM = "[a-z0-9!#$%&'*+/=?^_`{|}~-]";
+    private static String DOMAIN = "(" + ATOM + "+(\\." + ATOM + "+)*";
+    private static String IP_DOMAIN = "\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\]";
+
+    /**
+     * @see org.hibernate.validator.constraints.impl.EmailValidator
+     */
+    private Pattern pattern = java.util.regex.Pattern.compile(
+            "^" + ATOM + "+(\\." + ATOM + "+)*@"
+                    + DOMAIN
+                    + "|"
+                    + IP_DOMAIN
+                    + ")$",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+            );
 
     @Override
     public ValidationResult validate(MeetingInfo meetingInfo) {
@@ -73,21 +85,23 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
         UserInfo userInfo = meetingInfo.getUser();
         String contactName = userInfo.getName();
         if (contactName == null || contactName.trim().length() == 0) {
-            errors.addError(new ObjectError(userInfo, "name", "Contact name is required"));
+            errors.addError(new FieldError(userInfo, "name", "empty", "Contact name is required"));
         }
 
         String contactMail = userInfo.getEmail();
         if (contactMail == null || contactMail.trim().length() == 0) {
-            errors.addError(new ObjectError(userInfo, "mail", "Contact mail is required"));
+            errors.addError(new FieldError(userInfo, "mail", "empty", "Contact mail is required"));
         } else if (!pattern.matcher(contactMail).matches()) {
-            errors.addError(new ObjectError(userInfo, "mail", "Contact mail is invalid"));
+            errors.addError(new FieldError(userInfo, "mail", "invalid", "Contact mail is invalid"));
         }
 
-
-        List<Meeting> meetings = MeetingDb.getMeetings(meetingInfo.getStart(), meetingInfo.getEnd());
+        List<Meeting> meetings = MeetingDb
+                .getMeetings(meetingInfo.getStart(), meetingInfo.getEnd());
 
         // Logic updated to allow meeting editions
-        if ( meetings.size() > 1 || (meetings.size() == 1 && meetingInfo.getId() != meetings.get(0).getId()) ) {
+        if (meetings.size() > 1
+                || (meetings.size() == 1 && meetingInfo.getId() != null && meetingInfo.getId()
+                        .equals(meetings.get(0).getId()))) {
             errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
         }
 
