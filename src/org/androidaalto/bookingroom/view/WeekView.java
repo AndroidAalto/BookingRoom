@@ -47,7 +47,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
-import android.os.Parcelable;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.AttributeSet;
@@ -348,7 +347,8 @@ public class WeekView extends View implements MeetingEventListener {
     protected void onWindowVisibilityChanged(int visibility) {
         super.onWindowVisibilityChanged(visibility);
         if (visibility == View.VISIBLE)
-            postDelayed(((MainActivity) mContext).getScreensaverLauncher(), SCREEN_SAVER_DELAY_MILLIS);
+            postDelayed(((MainActivity) mContext).getScreensaverLauncher(),
+                    SCREEN_SAVER_DELAY_MILLIS);
         else
             removeCallbacks(((MainActivity) mContext).getScreensaverLauncher());
     }
@@ -468,7 +468,8 @@ public class WeekView extends View implements MeetingEventListener {
         mDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
         mMeetingTextColor = mResources.getColor(R.color.calendar_meeting_text_color);
         mMeetingBackgroundColor = mResources.getColor(R.color.meeting_background_color);
-        mMeetingBackgroundColorPastEvent = mResources.getColor(R.color.meeting_background_color_past_event);
+        mMeetingBackgroundColorPastEvent = mResources
+                .getColor(R.color.meeting_background_color_past_event);
         mHourSelectedColor = mResources.getColor(R.color.calendar_hour_selected);
         mGridAreaSelectedColor = mResources.getColor(R.color.calendar_grid_area_selected);
         mCalendarDateSelected = mResources.getColor(R.color.calendar_date_selected);
@@ -478,6 +479,11 @@ public class WeekView extends View implements MeetingEventListener {
         mNavigationTextColor = mResources.getColor(R.color.navigation_text);
         mNavigationBackgroundColor = mResources.getColor(R.color.navigation_background);
         mNavigationBackgroundDarkColor = mResources.getColor(R.color.navigation_background_dark);
+
+        mPaintBorder.setColor(0xffc8c8c8);
+        mPaintBorder.setStyle(Style.STROKE);
+        mPaintBorder.setAntiAlias(true);
+        mPaintBorder.setStrokeWidth(2.0f);
     }
 
     private void calculateScaleFonts() {
@@ -875,11 +881,12 @@ public class WeekView extends View implements MeetingEventListener {
 
             mMeetingsGeometryInfoMap.put(geometry, meeting);
             RectF rf = null;
-            if ( meeting.getEnd().toMillis(false) < System.currentTimeMillis() ) {
+            if (meeting.getEnd().toMillis(false) < System.currentTimeMillis()) {
                 // Past events with a different color a la Google Calendar
-                rf = drawMeetingRect(geometry, canvas, p, eventTextPaint, mMeetingBackgroundColorPastEvent );
+                rf = drawMeetingRect(geometry, canvas, p, eventTextPaint,
+                        mMeetingBackgroundColorPastEvent);
             } else {
-                rf = drawMeetingRect(geometry, canvas, p, eventTextPaint, mMeetingBackgroundColor );
+                rf = drawMeetingRect(geometry, canvas, p, eventTextPaint, mMeetingBackgroundColor);
             }
             drawMeetingText(meeting, rf, canvas, eventTextPaint, NORMAL_TEXT_TOP_MARGIN);
         }
