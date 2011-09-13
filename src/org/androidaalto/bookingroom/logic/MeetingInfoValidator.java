@@ -100,7 +100,7 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
 
         // Logic updated to allow meeting editions
         if (meetings.size() > 1
-                || (meetings.size() == 1 && meetingInfo.getId() != null && meetingInfo.getId()
+                || (meetings.size() == 1 && meetingInfo.getId() != null && !meetingInfo.getId()
                         .equals(meetings.get(0).getId()))) {
             errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
         }
