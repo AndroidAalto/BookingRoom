@@ -38,12 +38,10 @@ public class MeetingDb {
         try {
             cursor = db
                     .rawQuery(
-                            "SELECT id, user_id, pincode, title, start, end FROM meeting WHERE start >= ? AND end <= ? OR end > ? AND start < ?",
+                            "SELECT id, user_id, pincode, title, start, end FROM meeting WHERE end > ? AND start < ?",
                             new String[] {
                                     "" + from.toMillis(false),
                                     "" + to.toMillis(false),
-                                    "" + from.toMillis(false),
-                                    "" + to.toMillis(false)
                             });
 
             while (cursor.moveToNext()) {

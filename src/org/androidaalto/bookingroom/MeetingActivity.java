@@ -88,7 +88,7 @@ public class MeetingActivity extends Activity {
             Long meetingId = extras.getLong(EXTRA_ID);
             if (meetingId != 0) {
                 // Get the meeting info with its user info.
-                mMeeting  = MeetingManager.getMeeting(meetingId);
+                mMeeting = MeetingManager.getMeeting(meetingId);
                 setValuesForEditing(mMeeting);
             } else {
                 setValuesForNew(extras.getInt(EXTRA_DAY), extras.getInt(EXTRA_START_HOUR));
@@ -117,7 +117,8 @@ public class MeetingActivity extends Activity {
 
                 try {
                     if (mMeeting != null) {
-                        UserInfo updateUser = new UserInfo((long) mMeeting.getUser().getId(), nameEdit.getText().toString(), emailEdit.getText().toString());
+                        UserInfo updateUser = new UserInfo((long) mMeeting.getUser().getId(),
+                                nameEdit.getText().toString(), emailEdit.getText().toString());
                         MeetingInfo updateMI = new MeetingInfo(
                                 mMeeting.getId(),
                                 updateUser,
@@ -126,16 +127,19 @@ public class MeetingActivity extends Activity {
                                 titleEdit.getText().toString(),
                                 mMeeting.getPin());
                         MeetingManager.update(updateMI);
-                        Toast toast = Toast.makeText(getApplicationContext(), "Meeting updated", Toast.LENGTH_SHORT);
+                        Toast toast = Toast.makeText(getApplicationContext(), "Meeting updated",
+                                Toast.LENGTH_SHORT);
                         toast.show();
                         finish();
                     } else {
-                        MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
+                        MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText()
+                                .toString(), nameEdit
                                 .getText().toString(), emailEdit.getText().toString());
 
                         alertDialog.setTitle("Booking PIN code: " + myMI.getPin());
-                        alertDialog.setMessage("Please don't forget the PIN code if you want to cancel this meeting.");
-                        alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() { 
+                        alertDialog
+                                .setMessage("Please don't forget the PIN code if you want to cancel this meeting.");
+                        alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 // If we reach this point then booking went ok
@@ -168,10 +172,10 @@ public class MeetingActivity extends Activity {
             @Override
             public void onClick(View v) {
                 popup();
-              
+
             }
         });
-        
+
     }
 
     private void popup() {
@@ -183,29 +187,31 @@ public class MeetingActivity extends Activity {
 
         Button pinButtonOk = (Button) dialog.findViewById(R.id.pinButtonOk);
         pinText = (EditText) dialog.findViewById(R.id.pincode);
-        
+
         pinButtonOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Boolean check = checkPin(pinText.getText().toString());
-                if ( check ) {
+                if (check) {
                     Bundle extras = getIntent().getExtras();
                     Long i = extras.getLong(EXTRA_ID);
                     if (i != null) {
                         Log.i(TAG, "id is " + i);
                         MeetingManager.delete(i);
                     }
-                    Toast toast = Toast.makeText(getApplicationContext(), "Meeting deleted", Toast.LENGTH_SHORT);
+                    Toast toast = Toast.makeText(getApplicationContext(), "Meeting deleted",
+                            Toast.LENGTH_SHORT);
                     toast.show();
                     finish();
                 } else {
-                    Toast toast = Toast.makeText(getApplicationContext(), "Wrong pin", Toast.LENGTH_SHORT);
+                    Toast toast = Toast.makeText(getApplicationContext(), "Wrong pin",
+                            Toast.LENGTH_SHORT);
                     toast.show();
                 }
                 dialog.dismiss();
             }
         });
-        
+
         Button pinButtonCancel = (Button) dialog.findViewById(R.id.pinButtonCancel);
         pinButtonCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -254,7 +260,7 @@ public class MeetingActivity extends Activity {
     /**
      * @param meetingId
      */
-    private void setValuesForEditing(MeetingInfo meeting ) {
+    private void setValuesForEditing(MeetingInfo meeting) {
         // Existing meeting needs to have a title so we use that check to
         // display the delete button
         buttonDelete.setVisibility(View.VISIBLE);
@@ -264,12 +270,12 @@ public class MeetingActivity extends Activity {
         nameEdit.setText(meeting.getUser().getName());
         emailEdit.setText(meeting.getUser().getEmail());
     }
-    
+
     private boolean checkPin(String userPin) {
         Bundle extras = getIntent().getExtras();
         Integer meetingId = extras.getInt(EXTRA_PIN);
         Log.d(TAG, "User pin code: " + userPin.toString() + " Pin code: " + meetingId.toString());
-        
-        return ( userPin.equals(meetingId.toString() ) ) ? true : false;
+
+        return (userPin.equals(meetingId.toString())) ? true : false;
     }
 }
