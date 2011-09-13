@@ -254,6 +254,7 @@ public class WeekView extends View implements MeetingEventListener {
     private static int mSundayColor;
     private static int mMeetingTextColor;
     private static int mMeetingBackgroundColor;
+    private static int mMeetingBackgroundColorPastEvent;
     private static int mHourSelectedColor;
     private static int mCalendarDateSelected;
     private static int mCurrentTimeMarkerColor;
@@ -455,6 +456,7 @@ public class WeekView extends View implements MeetingEventListener {
         mDateBannerTextColor = mResources.getColor(R.color.calendar_date_banner_text_color);
         mMeetingTextColor = mResources.getColor(R.color.calendar_meeting_text_color);
         mMeetingBackgroundColor = mResources.getColor(R.color.meeting_background_color);
+        mMeetingBackgroundColorPastEvent = mResources.getColor(R.color.meeting_background_color_past_event);
         mHourSelectedColor = mResources.getColor(R.color.calendar_hour_selected);
         mGridAreaSelectedColor = mResources.getColor(R.color.calendar_grid_area_selected);
         mCalendarDateSelected = mResources.getColor(R.color.calendar_date_selected);
@@ -860,7 +862,13 @@ public class WeekView extends View implements MeetingEventListener {
             }
 
             mMeetingsGeometryInfoMap.put(geometry, meeting);
-            RectF rf = drawMeetingRect(geometry, canvas, p, eventTextPaint);
+            RectF rf = null;
+            if ( meeting.getEnd().toMillis(false) < System.currentTimeMillis() ) {
+                // Past events with a different color a la Google Calendar
+                rf = drawMeetingRect(geometry, canvas, p, eventTextPaint, mMeetingBackgroundColorPastEvent );
+            } else {
+                rf = drawMeetingRect(geometry, canvas, p, eventTextPaint, mMeetingBackgroundColor );
+            }
             drawMeetingText(meeting, rf, canvas, eventTextPaint, NORMAL_TEXT_TOP_MARGIN);
         }
     }
@@ -870,11 +878,11 @@ public class WeekView extends View implements MeetingEventListener {
      * @param canvas
      * @param p
      * @param meetingTextPaint
+     * @param color
      * @return
      */
     private RectF drawMeetingRect(MeetingGeometry geometry, Canvas canvas, Paint p,
-            Paint meetingTextPaint) {
-        int color = mMeetingBackgroundColor;
+            Paint meetingTextPaint, int color) {
 
         // TODO: If this event is selected, then use the selection color
         p.setColor(color);
