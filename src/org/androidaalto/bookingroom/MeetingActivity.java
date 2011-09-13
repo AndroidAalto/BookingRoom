@@ -62,6 +62,9 @@ public class MeetingActivity extends Activity {
     private int month;
     private int year;
 
+    /**
+     * Contains the current meeting being shown or null if it's new
+     */
     private MeetingInfo mMeeting = null;
 
     /** Called when the activity is first created. */
@@ -95,7 +98,6 @@ public class MeetingActivity extends Activity {
             }
         }
         alertDialog = new AlertDialog.Builder(this);
-        final Activity meetingActivity = this;
         buttonOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -115,70 +117,32 @@ public class MeetingActivity extends Activity {
                     end.normalize(true);
                 }
 
-                try {
-                    if (mMeeting != null) {
-                        UserInfo updateUser = new UserInfo((long) mMeeting.getUser().getId(),
-                                nameEdit.getText().toString(), emailEdit.getText().toString());
-                        MeetingInfo updateMI = new MeetingInfo(
-                                mMeeting.getId(),
-                                updateUser,
-                                start,
-                                end,
-                                titleEdit.getText().toString(),
-                                mMeeting.getPin());
-                        MeetingManager.update(updateMI);
-                        Toast toast = Toast.makeText(getApplicationContext(), "Meeting updated",
-                                Toast.LENGTH_SHORT);
-                        toast.show();
-                        finish();
-                    } else {
-                        MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText()
-                                .toString(), nameEdit
-                                .getText().toString(), emailEdit.getText().toString());
-
-                        alertDialog.setTitle("Booking PIN code: " + myMI.getPin());
-                        alertDialog
-                                .setMessage("Please don't forget the PIN code if you want to cancel this meeting.");
-                        alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                // If we reach this point then booking went ok
-                                meetingActivity.finish();
-                            }
-                        });
-                        alertDialog.show();
-                    }
-
-                } catch (ValidationException e) {
-                    // Initially set a generic error message
-                    String errorMessage = "Please check all the fields!";
-                    ValidationResult result = e.getErrors();
-                    List<ObjectError> errors = result.getErrors();
-                    if (!errors.isEmpty())
-                        errorMessage = errors.get(0).getMessage();
-                    Toast.makeText(meetingActivity, errorMessage, Toast.LENGTH_LONG).show();
+                if (mMeeting != null) {
+                    popup(false, start, end);
+                } else {
+                    createNewMeeting(start, end);
                 }
+
             }
         });
 
         buttonCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                meetingActivity.finish();
+                finish();
             }
         });
 
         buttonDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                popup();
-
+                popup(true, null, null);
             }
         });
 
     }
 
-    private void popup() {
+    private void popup(final boolean isDelete, final Time start, final Time end) {
         dialog = new Dialog(MeetingActivity.this);
         dialog.setContentView(R.layout.editpin);
         dialog.setTitle("Introduce your pin code");
@@ -193,15 +157,20 @@ public class MeetingActivity extends Activity {
             public void onClick(View v) {
                 Boolean check = checkPin(pinText.getText().toString());
                 if (check) {
-                    Bundle extras = getIntent().getExtras();
-                    Long i = extras.getLong(EXTRA_ID);
-                    if (i != null) {
-                        Log.i(TAG, "id is " + i);
-                        MeetingManager.delete(i);
+                    if (mMeeting != null) {
+                        Log.i(TAG, "id is " + mMeeting.getId());
+                        String message;
+                        if (isDelete) {
+                            MeetingManager.delete(mMeeting.getId());
+                            message = "Meeting deleted";
+                        } else {
+                            updateMeeting(MeetingActivity.this, start, end);
+                            message = "Meeting updated";
+                        }
+                        Toast toast = Toast.makeText(getApplicationContext(), message,
+                                Toast.LENGTH_SHORT);
+                        toast.show();
                     }
-                    Toast toast = Toast.makeText(getApplicationContext(), "Meeting deleted",
-                            Toast.LENGTH_SHORT);
-                    toast.show();
                     finish();
                 } else {
                     Toast toast = Toast.makeText(getApplicationContext(), "Wrong pin",
@@ -257,12 +226,8 @@ public class MeetingActivity extends Activity {
         year = start.year;
     }
 
-    /**
-     * @param meetingId
-     */
     private void setValuesForEditing(MeetingInfo meeting) {
-        // Existing meeting needs to have a title so we use that check to
-        // display the delete button
+        // Show delete button if editing a meeting
         buttonDelete.setVisibility(View.VISIBLE);
         buttonOk.setText("Edit");
         setTimeValues(meeting.getStart(), meeting.getEnd());
@@ -276,6 +241,58 @@ public class MeetingActivity extends Activity {
         Integer meetingId = extras.getInt(EXTRA_PIN);
         Log.d(TAG, "User pin code: " + userPin.toString() + " Pin code: " + meetingId.toString());
 
-        return (userPin.equals(meetingId.toString())) ? true : false;
+        return userPin.equals(meetingId.toString());
+    }
+
+    private void updateMeeting(final Activity meetingActivity, Time start, Time end) {
+        try {
+            UserInfo updateUser = new UserInfo((long) mMeeting.getUser().getId(),
+                    nameEdit.getText().toString(), emailEdit.getText().toString());
+            MeetingInfo updateMI = new MeetingInfo(
+                    mMeeting.getId(),
+                    updateUser,
+                    start,
+                    end,
+                    titleEdit.getText().toString(),
+                    mMeeting.getPin());
+            MeetingManager.update(updateMI);
+            Toast toast = Toast.makeText(getApplicationContext(), "Meeting updated",
+                    Toast.LENGTH_SHORT);
+            toast.show();
+        } catch (ValidationException e) {
+            showError(e);
+        }
+    }
+
+    private void createNewMeeting(Time start, Time end) {
+        try {
+            MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText()
+                    .toString(), nameEdit
+                    .getText().toString(), emailEdit.getText().toString());
+
+            alertDialog.setTitle("Booking PIN code: " + myMI.getPin());
+            alertDialog
+                    .setMessage("Please don't forget the PIN code if you want to cancel this meeting.");
+            alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // If we reach this point then booking went ok
+                    finish();
+                }
+            });
+            alertDialog.show();
+        } catch (ValidationException e) {
+            showError(e);
+        }
+    }
+
+    private void showError(ValidationException e) {
+        // Initially set a generic error message
+        String errorMessage = "Please check all the fields!";
+        ValidationResult result = e.getErrors();
+        List<ObjectError> errors = result.getErrors();
+        if (!errors.isEmpty())
+            errorMessage = errors.get(0).getMessage();
+        Toast.makeText(MeetingActivity.this, errorMessage, Toast.LENGTH_LONG).show();
     }
 }
