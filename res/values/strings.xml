@@ -29,4 +29,11 @@
     <string name="next_week">Next week</string>
     <string name="previous_week">Previous week</string>
     <string name="go_to_today">Go to today</string>
+    
+    <!-- About -->
+    
+    <string name="aboutTxt">
+(C) AndroidAalto 2011\n\n\
+<b>TODO</b> some text in here\n\
+</string>
 </resources>

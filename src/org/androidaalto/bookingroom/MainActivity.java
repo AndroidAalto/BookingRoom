@@ -105,8 +105,8 @@ public class MainActivity extends Activity {
                 now.normalize(true);
                 currentView.setSelectedDay(now);
                 break;
-            case R.id.goScreensaver:
-                startActivity(new Intent(this, Screensaver.class));
+            case R.id.aboutPopup:
+                startActivity(new Intent(this, AboutActivity.class));
                 break;
         }
         return false;
