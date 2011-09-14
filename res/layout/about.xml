@@ -7,7 +7,7 @@
     <ImageView
         android:id="@+id/logo"
         android:orientation="vertical"
-        android:src="@drawable/logo_reversed_medium"
+        android:src="@drawable/androidaalto_logo"
         android:layout_marginBottom="10dip"
         android:gravity="center_vertical|center_horizontal"
         android:layout_width="wrap_content"

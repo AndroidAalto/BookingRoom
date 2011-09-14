@@ -1221,7 +1221,7 @@ public class WeekView extends View implements MeetingEventListener {
     protected void onSizeChanged(int width, int height, int oldw, int oldh) {
         mViewWidth = width;
         mViewHeight = height;
-        int gridAreaWidth = mViewWidth - 2 * mNavigationWidth;
+        int gridAreaWidth = mViewWidth - 2 * mNavigationWidth - mHoursWidth;
         mCellWidth = (gridAreaWidth - (mNumDays * DAY_GAP)) / mNumDays;
 
         Paint p = new Paint();
