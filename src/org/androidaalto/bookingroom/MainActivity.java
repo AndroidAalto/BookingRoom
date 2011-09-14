@@ -19,10 +19,8 @@
 
 package org.androidaalto.bookingroom;
 
-import org.androidaalto.bookingroom.model.Meeting;
 import org.androidaalto.bookingroom.model.User;
 import org.androidaalto.bookingroom.model.db.DataBaseHelper;
-import org.androidaalto.bookingroom.model.db.MeetingDb;
 import org.androidaalto.bookingroom.model.db.UserDb;
 import org.androidaalto.bookingroom.view.WeekView;
 
@@ -36,9 +34,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import java.util.List;
-
 public class MainActivity extends Activity {
+    public static final String DEFAULT_ADMIN_EMAIL = "bookingroom_admin@aaltovg.com";
     private static final String TAG = MainActivity.class.getSimpleName();
     private TextView title;
     private WeekView currentView;
@@ -55,6 +52,12 @@ public class MainActivity extends Activity {
         currentView = (WeekView) findViewById(R.id.weekView);
         currentView.setTitleTextView(title);
         screensaverLauncher = new ScreensaverLauncher(this);
+
+        if (UserDb.get(DEFAULT_ADMIN_EMAIL) == null) {
+            User admin = new User(null, "bookingroom_admin", DEFAULT_ADMIN_EMAIL, "012345", -1,
+                    true);
+            UserDb.store(admin);
+        }
     }
 
     @Override

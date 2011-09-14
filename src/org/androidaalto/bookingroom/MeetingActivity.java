@@ -22,6 +22,7 @@ package org.androidaalto.bookingroom;
 import org.androidaalto.bookingroom.logic.MeetingInfo;
 import org.androidaalto.bookingroom.logic.MeetingManager;
 import org.androidaalto.bookingroom.logic.UserInfo;
+import org.androidaalto.bookingroom.logic.UserManager;
 import org.androidaalto.bookingroom.validation.ObjectError;
 import org.androidaalto.bookingroom.validation.ValidationException;
 import org.androidaalto.bookingroom.validation.ValidationResult;
@@ -158,6 +159,9 @@ public class MeetingActivity extends Activity {
             @Override
             public void onClick(View v) {
                 Boolean check = checkPin(pinText.getText().toString());
+                if (!check) {
+                    check = checkAdminPass(pinText.getText().toString());
+                }
                 if (check) {
                     if (mMeeting != null) {
                         Log.i(TAG, "id is " + mMeeting.getId());
@@ -195,6 +199,18 @@ public class MeetingActivity extends Activity {
     }
 
     /**
+     * @param pin
+     * @return
+     */
+    private Boolean checkAdminPass(String pin) {
+        UserInfo adminUser = UserManager.getUser(MainActivity.DEFAULT_ADMIN_EMAIL);
+        if (adminUser == null) {
+            return false;
+        }
+        return adminUser.getPassword().equals(pin);
+    }
+
+    /**
      * @param int1
      * @param int2
      */
@@ -215,7 +231,8 @@ public class MeetingActivity extends Activity {
     }
 
     private void setTimeValues(Time start, Time end) {
-        SpannableString contentUnderline = new SpannableString(meetingHeader.getText() + " - " + start.format("%d/%m/%Y"));
+        SpannableString contentUnderline = new SpannableString(meetingHeader.getText() + " - "
+                + start.format("%d/%m/%Y"));
         contentUnderline.setSpan(new UnderlineSpan(), 0, contentUnderline.length(), 0);
         meetingHeader.setText(contentUnderline);
 
@@ -236,7 +253,7 @@ public class MeetingActivity extends Activity {
         buttonOk.setText("Update");
 
         // Prevent people editing/deleting past events
-        if ( meeting.getEnd().toMillis(false) < System.currentTimeMillis() ) {
+        if (meeting.getEnd().toMillis(false) < System.currentTimeMillis()) {
             buttonDelete.setVisibility(View.INVISIBLE);
             buttonOk.setVisibility(View.INVISIBLE);
         }
