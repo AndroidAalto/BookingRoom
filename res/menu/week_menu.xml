@@ -6,6 +6,8 @@
         android:title="@string/go_to_today"></item>
     <!--  Temporary entry to test screensaver -->
     <item
-        android:id="@+id/goScreensaver"
-        android:title="Screensaver"></item>
+        android:id="@+id/aboutPopup"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:title="About"></item>
+        
 </menu>

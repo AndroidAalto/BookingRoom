@@ -66,26 +66,6 @@ public class MainActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-
-        Log.d(TAG, "" + UserDb.getUserCount());
-        Log.d(TAG, "" + MeetingDb.getMeetingCount());
-        User myUser = UserDb.get("test@test.com");
-        if (myUser != null) {
-            Log.d(TAG, "" + myUser.getName());
-        }
-
-        Time start = new Time();
-        start.set(04, 9 - 1, 2011); // Months are 0-11
-        Time end = new Time();
-        end.set(11, 9 - 1, 2011); // Months are 0-11
-
-        List<Meeting> meetings = MeetingDb.getMeetings(start, end);
-
-        if (meetings.size() > 0) {
-            for (Meeting m : meetings) {
-                Log.d(TAG, "Id: " + m.getId() + " Title: " + m.getTitle());
-            }
-        }
     }
 
     @Override
@@ -105,8 +85,8 @@ public class MainActivity extends Activity {
                 now.normalize(true);
                 currentView.setSelectedDay(now);
                 break;
-            case R.id.goScreensaver:
-                startActivity(new Intent(this, Screensaver.class));
+            case R.id.aboutPopup:
+                startActivity(new Intent(this, AboutActivity.class));
                 break;
         }
         return false;

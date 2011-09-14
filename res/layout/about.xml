@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="10dip">
+    <ImageView
+        android:id="@+id/logo"
+        android:orientation="vertical"
+        android:src="@drawable/logo_reversed_medium"
+        android:layout_marginBottom="10dip"
+        android:gravity="center_vertical|center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+    </ImageView>
+    <TextView
+        android:id="@+id/aboutContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="@string/aboutTxt"
+        android:layout_below="@+id/logo"
+        android:paddingRight="3dip" 
+        android:paddingLeft="3dip" />
+</RelativeLayout>
