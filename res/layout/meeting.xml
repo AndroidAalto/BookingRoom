@@ -4,6 +4,7 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:id="@+id/scrollview"
+    style="@style/background"
     android:layout_height="fill_parent">
 
     <LinearLayout
@@ -30,7 +31,7 @@
 
             <TextView
                 style="@style/normalText"
-                android:layout_width="100dip"
+                android:layout_width="120dip"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/meetingHeader"
                 android:text="@string/meetingLabelText"
@@ -117,7 +118,7 @@
 
             <TextView
                 style="@style/normalText"
-                android:layout_width="100dip"
+                android:layout_width="120dip"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/contactHeader"
                 android:text="@string/contactNameLabel"
@@ -137,7 +138,7 @@
 
             <TextView
                 style="@style/normalText"
-                android:layout_width="100dip"
+                android:layout_width="120dip"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/nameEdit"
                 android:text="@string/contactEmailLabel"
@@ -179,6 +180,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/buttonOK"
+                android:layout_marginTop="10dip"
                 android:text="@string/buttonCancel"
                 android:id="@+id/buttonCancel">
             </Button>
@@ -190,6 +192,7 @@
                 android:layout_below="@+id/buttonCancel"
                 android:text="@string/buttonDelete"
                 android:id="@+id/buttonDelete"
+                android:layout_marginTop="10dip"
                 android:textColor="#FF0000"
                 android:visibility="gone">
             </Button>
