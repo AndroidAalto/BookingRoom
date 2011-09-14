@@ -27,4 +27,15 @@ public class AboutActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.about);
     }
+    
+    /* 
+     * Makes sure the About activity is finished
+     * when calling the Screensaver. Otherwise the
+     * user might be a bit confused
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        finish();
+    }
 }
