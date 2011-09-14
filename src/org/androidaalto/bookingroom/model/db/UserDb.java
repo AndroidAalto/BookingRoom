@@ -121,6 +121,8 @@ public class UserDb {
         value.put("Name", user.getName());
         value.put("email", user.getEmail());
         value.put("is_admin", user.isAdmin());
+        value.put("salt", user.getSalt());
+        value.put("password", user.getPassword());
         db.insert("user", null, value);
         return UserDb.get(user.getEmail());
     }
@@ -134,7 +136,8 @@ public class UserDb {
         ContentValues value = new ContentValues();
         value.put("name", user.getName());
         value.put("email", user.getEmail());
-
+        value.put("salt", user.getSalt());
+        value.put("password", user.getPassword());
         db.update("user", value, "id = ?", new String[] { "" + user.getId() });
         return UserDb.get(user.getId());
     }

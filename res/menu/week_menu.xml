@@ -4,10 +4,12 @@
         android:id="@+id/goToday"
         android:icon="@android:drawable/ic_menu_today"
         android:title="@string/go_to_today"></item>
-    <!--  Temporary entry to test screensaver -->
     <item
         android:id="@+id/aboutPopup"
         android:icon="@android:drawable/ic_menu_info_details"
         android:title="About"></item>
-        
+    <item
+        android:id="@+id/changeAdminPassword"
+        android:icon="@android:drawable/ic_lock_lock"
+        android:title="Admin password"></item>
 </menu>
