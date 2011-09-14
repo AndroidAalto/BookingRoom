@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:background="#FFFFFF"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    <ImageView
-        android:orientation="vertical"
-        android:src="@drawable/androidaalto_logo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    </ImageView>
+<LinearLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res/org.androidaalto.bookingroom"
+	android:orientation="vertical" 
+	android:background="#000000"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent">
+	<org.androidaalto.bookingroom.view.ScreensaverView 
+		android:orientation="vertical"
+		app:image="@drawable/androidaalto_logo" 
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent" />
 </LinearLayout>
