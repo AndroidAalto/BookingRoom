@@ -234,6 +234,13 @@ public class MeetingActivity extends Activity {
         // Show delete button if editing a meeting
         buttonDelete.setVisibility(View.VISIBLE);
         buttonOk.setText("Edit");
+
+        // Prevent people editing/deleting past events
+        if ( meeting.getEnd().toMillis(false) < System.currentTimeMillis() ) {
+            buttonDelete.setVisibility(View.INVISIBLE);
+            buttonOk.setVisibility(View.INVISIBLE);
+        }
+
         setTimeValues(meeting.getStart(), meeting.getEnd());
         titleEdit.setText(meeting.getTitle());
         nameEdit.setText(meeting.getUser().getName());
