@@ -20,9 +20,10 @@
 package org.androidaalto.bookingroom.model.db;
 
 import org.androidaalto.bookingroom.R;
+import org.androidaalto.bookingroom.model.User;
 
-import android.content.ContentValues;
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -35,28 +36,31 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     // Remember to increase whenever you want to call onUpdate
     private static final int DB_VERSION = 1;
 
-    private static final String CREATE_MEETING_SQL =
-            "CREATE TABLE meeting(" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "user_id INTEGER," +
-                    "title VARCHAR("+ R.string.max_meeting_title_length +")," +
-                    "start TIMESTAMP," +
-                    "end TIMESTAMP," +
-                    "pincode INTEGER default 0000)";
+    private static String CREATE_MEETING_SQL;
 
-    private static final String CREATE_USER_SQL =
-            "CREATE TABLE user(" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "name VARCHAR(" + R.string.max_user_name_length + ")," +
-                    "email VARCHAR("+ R.string.max_user_mail_length +")," +
-                    "password VARCHAR("+ R.string.max_user_password_length +")," +
-                    "salt VARCHAR(50)," +
-                    "is_admin BOOLEAN default false)";
+    private static String CREATE_USER_SQL;
 
     private static DataBaseHelper instance;
 
     private DataBaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
+        Resources res = context.getResources();
+        CREATE_MEETING_SQL =
+                "CREATE TABLE meeting(" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "user_id INTEGER," +
+                        "title VARCHAR(" + res.getText(R.string.max_meeting_title_length) + ")," +
+                        "start TIMESTAMP," +
+                        "end TIMESTAMP," +
+                        "pincode INTEGER default 0000)";
+        CREATE_USER_SQL =
+                "CREATE TABLE user(" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "name VARCHAR(" + res.getText(R.string.max_user_name_length) + ")," +
+                        "email VARCHAR(" + res.getText(R.string.max_user_mail_length) + ")," +
+                        "password VARCHAR(" + res.getText(R.string.max_user_password_length) + ")," +
+                        "salt VARCHAR(50)," +
+                        "is_admin BOOLEAN default false)";
     }
 
     public static DataBaseHelper getInstance() {
