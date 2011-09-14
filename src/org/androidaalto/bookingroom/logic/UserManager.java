@@ -34,4 +34,13 @@ public class UserManager {
         return new UserInfo(user.getId(), user.getName(), user.getEmail(), user.getPassword(),
                 user.getSalt());
     }
+
+    /**
+     * @param admin
+     * @param newPassStr
+     */
+    public static UserInfo updatePassword(UserInfo admin) {
+        User user = UserDb.update(admin);
+        return new UserInfo(user.getId(), user.getName(), user.getEmail(), user.getPassword(), user.getSalt());
+    }
 }
