@@ -2,6 +2,7 @@
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
+    style="@style/background"
     android:id="@+id/scrollview"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
@@ -10,7 +11,6 @@
         android:orientation="vertical"
         android:paddingLeft="40dip"
         android:layout_width="fill_parent"
-
         android:layout_height="fill_parent">
 
         <RelativeLayout
@@ -29,7 +29,7 @@
 
             <TextView
                 style="@style/normalText"
-                android:layout_width="100dip"
+                android:layout_width="120dip"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/meetingHeader"
                 android:text="@string/meetingLabelText"
@@ -47,6 +47,16 @@
                 android:maxLength="@string/max_meeting_title_length"
                 android:id="@+id/titleEdit">
             </EditText>
+
+            <ImageView
+                android:orientation="vertical"
+                android:src="@drawable/logo_reversed_medium"
+                android:layout_marginTop="10dip"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+            </ImageView>
 
         </RelativeLayout>
 
@@ -66,14 +76,13 @@
 
             <TextView
                 style="@style/timerText"
-                android:layout_width="100dip"
+                android:layout_width="120dip"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/scheduleHeader"
                 android:text="@string/scheduleStartLabel"
                 android:id="@+id/startLabel">
             </TextView>
 
-            <!-- http://stackoverflow.com/questions/6790917/setting-android-timepicker-in-xml -->
             <TimePicker
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -118,7 +127,7 @@
 
             <TextView
                 style="@style/normalText"
-                android:layout_width="100dip"
+                android:layout_width="120dip"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/contactHeader"
                 android:text="@string/contactNameLabel"
@@ -139,7 +148,7 @@
 
             <TextView
                 style="@style/normalText"
-                android:layout_width="100dip"
+                android:layout_width="120dip"
                 android:layout_height="wrap_content"
                 android:paddingLeft="20dip"
                 android:layout_below="@+id/contactHeader"

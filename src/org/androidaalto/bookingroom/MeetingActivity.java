@@ -31,7 +31,9 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.SpannableString;
 import android.text.format.Time;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -213,7 +215,9 @@ public class MeetingActivity extends Activity {
     }
 
     private void setTimeValues(Time start, Time end) {
-        meetingHeader.setText(meetingHeader.getText() + " - " + start.format("%d/%m/%Y"));
+        SpannableString contentUnderline = new SpannableString(meetingHeader.getText() + " - " + start.format("%d/%m/%Y"));
+        contentUnderline.setSpan(new UnderlineSpan(), 0, contentUnderline.length(), 0);
+        meetingHeader.setText(contentUnderline);
 
         startPicker.setCurrentHour(start.hour);
         startPicker.setCurrentMinute(start.minute);
