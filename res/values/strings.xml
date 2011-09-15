@@ -8,7 +8,7 @@
     
     
     <!--  Add meeting -->
-    <string name="meetingHeaderText"><u>Meeting</u></string>
+    <string name="meetingHeaderText">Meeting</string>
     <string name="meetingLabelText">Title</string>
     
     <string name="scheduleHeaderText"><u>Schedule</u></string>

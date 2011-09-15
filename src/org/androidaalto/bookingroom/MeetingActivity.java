@@ -29,6 +29,7 @@ import org.androidaalto.bookingroom.validation.ValidationResult;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -38,6 +39,7 @@ import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -59,11 +61,13 @@ public class MeetingActivity extends Activity {
     EditText titleEdit, nameEdit, emailEdit, pinText;
     TimePicker startPicker, endPicker;
     TextView meetingHeader;
-    Button buttonOk, buttonCancel, buttonDelete;
+    Button buttonOk, buttonCancel, buttonDelete, buttonDateSelector;
 
     private int day;
     private int month;
     private int year;
+
+    static final int DATE_DIALOG_ID = 0;
 
     /**
      * Contains the current meeting being shown or null if it's new
@@ -85,6 +89,7 @@ public class MeetingActivity extends Activity {
         buttonOk = (Button) findViewById(R.id.buttonOK);
         buttonCancel = (Button) findViewById(R.id.buttonCancel);
         buttonDelete = (Button) findViewById(R.id.buttonDelete);
+        buttonDateSelector = (Button) findViewById(R.id.buttonDateSelector);
 
         startPicker.setIs24HourView(true);
         endPicker.setIs24HourView(true);
@@ -143,6 +148,35 @@ public class MeetingActivity extends Activity {
             }
         });
 
+        buttonDateSelector.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialog(DATE_DIALOG_ID);
+            }
+        });
+    }
+
+    // the callback received when the user "sets" the date in the dialog
+    private DatePickerDialog.OnDateSetListener mDateSetListener = new DatePickerDialog.OnDateSetListener() {
+        public void onDateSet(DatePicker view, int rYear, int rMonth, int rDay) {
+            year = rYear;
+            month = rMonth;
+            day = rDay;
+
+            // Update date in UI
+            Time newTime = new Time();
+            newTime.set(rDay, rMonth, rYear);
+            updateHeaderDate(newTime);
+        }
+    };
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        switch (id) {
+            case DATE_DIALOG_ID:
+                return new DatePickerDialog(this, mDateSetListener, year, month, day);
+        }
+        return null;
     }
 
     private void popup(final boolean isDelete, final Time start, final Time end) {
@@ -165,17 +199,15 @@ public class MeetingActivity extends Activity {
                 if (check) {
                     if (mMeeting != null) {
                         Log.i(TAG, "id is " + mMeeting.getId());
-                        String message;
+
                         if (isDelete) {
                             MeetingManager.delete(mMeeting.getId());
-                            message = "Meeting deleted";
+                            Toast toast = Toast.makeText(getApplicationContext(), "Meeting deleted",
+                                    Toast.LENGTH_SHORT);
+                            toast.show();
                         } else {
                             updateMeeting(MeetingActivity.this, start, end);
-                            message = "Meeting updated";
                         }
-                        Toast toast = Toast.makeText(getApplicationContext(), message,
-                                Toast.LENGTH_SHORT);
-                        toast.show();
                     }
                     finish();
                 } else {
@@ -231,10 +263,7 @@ public class MeetingActivity extends Activity {
     }
 
     private void setTimeValues(Time start, Time end) {
-        SpannableString contentUnderline = new SpannableString(meetingHeader.getText() + " - "
-                + start.format("%d/%m/%Y"));
-        contentUnderline.setSpan(new UnderlineSpan(), 0, contentUnderline.length(), 0);
-        meetingHeader.setText(contentUnderline);
+        updateHeaderDate(start);
 
         startPicker.setCurrentHour(start.hour);
         startPicker.setCurrentMinute(start.minute);
@@ -256,6 +285,7 @@ public class MeetingActivity extends Activity {
         if (meeting.getEnd().toMillis(false) < System.currentTimeMillis()) {
             buttonDelete.setVisibility(View.INVISIBLE);
             buttonOk.setVisibility(View.INVISIBLE);
+            buttonDateSelector.setVisibility(View.INVISIBLE);
         }
 
         setTimeValues(meeting.getStart(), meeting.getEnd());
@@ -322,5 +352,12 @@ public class MeetingActivity extends Activity {
         if (!errors.isEmpty())
             errorMessage = errors.get(0).getMessage();
         Toast.makeText(MeetingActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+    }
+
+    private void updateHeaderDate(Time time) {
+        SpannableString contentUnderline = new SpannableString(
+                getResources().getString(R.string.meetingHeaderText) + " - " + time.format("%d/%m/%Y"));
+        contentUnderline.setSpan(new UnderlineSpan(), 0, contentUnderline.length(), 0);
+        meetingHeader.setText(contentUnderline);
     }
 }

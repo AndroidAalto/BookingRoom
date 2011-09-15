@@ -23,17 +23,27 @@
 
             <TextView
                 style="@style/header"
-                android:layout_width="fill_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/meetingHeaderText"
                 android:id="@+id/meetingHeader">
             </TextView>
+            
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dip"
+                android:layout_marginLeft="5dip"
+                android:layout_below="@+id/meetingHeader"
+                android:text="Change date"
+                android:id="@+id/buttonDateSelector">
+            </Button>
 
             <TextView
                 style="@style/normalText"
                 android:layout_width="120dip"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/meetingHeader"
+                android:layout_below="@+id/buttonDateSelector"
                 android:text="@string/meetingLabelText"
                 android:id="@+id/titleLabel">
             </TextView>
