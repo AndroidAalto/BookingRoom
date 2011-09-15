@@ -21,11 +21,21 @@
 
             <TextView
                 style="@style/header"
-                android:layout_width="fill_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/meetingHeaderText"
                 android:id="@+id/meetingHeader">
             </TextView>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dip"
+                android:layout_marginLeft="10dip"
+                android:layout_toRightOf="@+id/meetingHeader"
+                android:text="Change date"
+                android:id="@+id/buttonDateSelector">
+            </Button>
 
             <TextView
                 style="@style/normalText"
