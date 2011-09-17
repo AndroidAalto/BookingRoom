@@ -30,6 +30,15 @@ public class Screensaver extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.screensaver);
     }
+    
+    /* (non-Javadoc)
+     * @see android.app.Activity#onPause()
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        finish();
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
