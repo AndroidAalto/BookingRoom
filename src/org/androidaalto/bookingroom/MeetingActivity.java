@@ -199,9 +199,15 @@ public class MeetingActivity extends Activity {
         pinButtonOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String deleteText = "Meeting deleted";
                 Boolean check = checkPin(pinText.getText().toString());
                 if (!check) {
                     check = checkAdminPass(pinText.getText().toString());
+                    if ( check ) {
+                        deleteText += "\nPlease be nice and inform " +
+                            mMeeting.getUser().getEmail() +
+                            " about his/her booking being cancelled";
+                    }
                 }
                 if (check) {
                     switch (action) {
@@ -213,7 +219,7 @@ public class MeetingActivity extends Activity {
                             } else {
                                 MeetingManager.delete(mMeeting.getId());
                                 Toast toast = Toast.makeText(getApplicationContext(),
-                                        "Meeting deleted", Toast.LENGTH_SHORT);
+                                        deleteText, Toast.LENGTH_SHORT);
                                 toast.show();
                             }
                             finish();
