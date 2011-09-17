@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
     private TextView title;
     private WeekView currentView;
     private Runnable screensaverLauncher;
+    private Dialog dialog = null;
 
     /** Called when the activity is first created. */
     @Override
@@ -71,6 +72,14 @@ public class MainActivity extends Activity {
     public void onPause() {
         super.onPause();
         DataBaseHelper.getInstance().close();
+        dismissChangePasswordDialog();
+    }
+
+    private void dismissChangePasswordDialog() {
+        if (dialog != null) {
+            dialog.dismiss();
+            dialog = null;
+        }
     }
 
     @Override
@@ -105,7 +114,7 @@ public class MainActivity extends Activity {
     }
 
     private void showChangePasswordDialog() {
-        final Dialog dialog = new Dialog(this);
+        dialog = new Dialog(this);
         dialog.setContentView(R.layout.changepassword);
         dialog.setTitle("Change administrator password");
         dialog.setCancelable(true);
@@ -124,7 +133,7 @@ public class MainActivity extends Activity {
                     Toast error = Toast.makeText(MainActivity.this,
                             "Default admin user not found!", Toast.LENGTH_LONG);
                     error.show();
-                    dialog.dismiss();
+                    dismissChangePasswordDialog();
                 } else {
                     String newPassStr = newPass.getText().toString();
                     if (!newPassStr.equals(newPassAgain.getText().toString())) {
@@ -133,12 +142,13 @@ public class MainActivity extends Activity {
                         error.show();
                     } else {
                         if (currentPass.getText().toString().equals(admin.getPassword())) {
-                            UserInfo newAdmin = new UserInfo(admin.getId(), admin.getName(), admin.getEmail(), newPassStr, admin.getSalt());
+                            UserInfo newAdmin = new UserInfo(admin.getId(), admin.getName(), admin
+                                    .getEmail(), newPassStr, admin.getSalt());
                             UserManager.updatePassword(newAdmin);
                             Toast error = Toast.makeText(MainActivity.this,
                                     "Admin password changed!", Toast.LENGTH_LONG);
                             error.show();
-                            dialog.dismiss();
+                            dismissChangePasswordDialog();
                         } else {
                             Toast error = Toast.makeText(MainActivity.this,
                                     "Invalid current password!", Toast.LENGTH_LONG);
@@ -153,7 +163,7 @@ public class MainActivity extends Activity {
         cancelBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialog.dismiss();
+                dismissChangePasswordDialog();
             }
         });
     }
