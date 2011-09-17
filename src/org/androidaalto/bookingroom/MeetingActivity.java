@@ -199,17 +199,12 @@ public class MeetingActivity extends Activity {
         pinButtonOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String deleteText = "Meeting deleted";
                 Boolean check = checkPin(pinText.getText().toString());
+                Boolean checkAdmin = false;
                 if (!check) {
-                    check = checkAdminPass(pinText.getText().toString());
-                    if ( check ) {
-                        deleteText += "\nPlease be nice and inform " +
-                            mMeeting.getUser().getEmail() +
-                            " about his/her booking being cancelled";
-                    }
+                    checkAdmin = checkAdminPass(pinText.getText().toString());
                 }
-                if (check) {
+                if (check || checkAdmin ) {
                     switch (action) {
                         case DELETE:
                             if (mMeeting == null) {
@@ -218,11 +213,31 @@ public class MeetingActivity extends Activity {
                                 toast.show();
                             } else {
                                 MeetingManager.delete(mMeeting.getId());
-                                Toast toast = Toast.makeText(getApplicationContext(),
-                                        deleteText, Toast.LENGTH_SHORT);
-                                toast.show();
+                                // If meeting has been deleted as a normal user show a
+                                // simple toast messsage. If deleted as admin show a dialog
+                                if ( check ) {
+                                    Toast toast = Toast.makeText(getApplicationContext(),
+                                        "Meeting deleted", Toast.LENGTH_SHORT);
+                                    toast.show();
+                                } else if ( checkAdmin ) {
+                                    alertDialog.setTitle("Meeting deleted");
+                                    alertDialog.setCancelable(false);
+                                    alertDialog.setMessage("Please contact " + mMeeting.getUser().getEmail() +
+                                                            " to inform about his/her meeting being cancelled.");
+                                    alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            finish();
+                                        }
+                                    });
+                                    alertDialog.show();
+                                }
                             }
-                            finish();
+                            // The dialog when deleting a meeting as admin already takes
+                            // care of finishing the activity
+                            if ( !checkAdmin ) {
+                                finish();
+                            }
                             break;
                         case EDIT:
                             if (mMeeting == null) {
@@ -357,6 +372,7 @@ public class MeetingActivity extends Activity {
                     .getText().toString(), emailEdit.getText().toString());
 
             alertDialog.setTitle("Booking PIN code: " + myMI.getPin());
+            alertDialog.setCancelable(false);
             alertDialog
                     .setMessage("Please don't forget the PIN code if you want to cancel this meeting.");
             alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
