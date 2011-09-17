@@ -38,6 +38,7 @@ import android.text.format.Time;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -79,6 +80,8 @@ public class MeetingActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.meeting);
+
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         meetingHeader = (TextView) findViewById(R.id.meetingHeader);
         startPicker = (TimePicker) findViewById(R.id.startPicker);
