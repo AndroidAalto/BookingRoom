@@ -78,6 +78,11 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
 
     public ValidationResult minimumValidate(MeetingInfo meetingInfo) {
         final ValidationResult errors = new ValidationResult();
+
+        if ( meetingInfo.getTitle().trim().length() == 0 ) {
+            errors.addError(new FieldError(meetingInfo, "title", "empty", "Meeting title is required"));
+        }
+
         final Time now = new Time();
         now.setToNow();
         if (meetingInfo.getStart().before(now))
