@@ -70,7 +70,7 @@ import java.util.regex.Pattern;
 public class WeekView extends View implements MeetingEventListener {
 
     private static final String TAG = WeekView.class.getSimpleName();
-    private static final int SCREEN_SAVER_DELAY_MILLIS = 5000;
+    private static final int SCREEN_SAVER_DELAY_MILLIS = 5 * 60 * 1000;
 
     static private class DayHeader {
         int cell;
