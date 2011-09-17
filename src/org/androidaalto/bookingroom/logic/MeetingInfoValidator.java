@@ -57,19 +57,9 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
             );
 
     @Override
-    public ValidationResult validate(MeetingInfo meetingInfo) {
+    public ValidationResult fullValidate(MeetingInfo meetingInfo) {
         final ValidationResult errors = new ValidationResult();
         final long nowMillis = System.currentTimeMillis();
-        final Time now = new Time();
-        now.set(nowMillis);
-        if (meetingInfo.getStart().before(now))
-            errors.addError(new FieldError(meetingInfo, "start", "beforeNow",
-                    "Starting time in past"));
-
-        if (!meetingInfo.getStart().before(meetingInfo.getEnd()))
-            errors.addError(new FieldError(meetingInfo, "end", "beforeStart",
-                    "Ending time before starting time"));
-
         final Time maximumStartingTime = new Time();
         maximumStartingTime.set(nowMillis + MAX_START_TIME_INCREASE_IN_MILLIS);
         if (meetingInfo.getStart().after(maximumStartingTime))
@@ -81,6 +71,22 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
         if (meetingInfo.getEnd().after(maximumEndingTime))
             errors.addError(new FieldError(meetingInfo, "end", "tooLong",
                     "Meeting can't be longer than " + MAX_HOURS + " hours."));
+
+        errors.addAll(minimumValidate(meetingInfo));
+        return errors;
+    }
+
+    public ValidationResult minimumValidate(MeetingInfo meetingInfo) {
+        final ValidationResult errors = new ValidationResult();
+        final Time now = new Time();
+        now.setToNow();
+        if (meetingInfo.getStart().before(now))
+            errors.addError(new FieldError(meetingInfo, "start", "beforeNow",
+                    "Starting time in past"));
+
+        if (!meetingInfo.getStart().before(meetingInfo.getEnd()))
+            errors.addError(new FieldError(meetingInfo, "end", "beforeStart",
+                    "Ending time before starting time"));
 
         UserInfo userInfo = meetingInfo.getUser();
         String contactName = userInfo.getName();
@@ -112,7 +118,6 @@ public class MeetingInfoValidator implements Validator<MeetingInfo> {
                 errors.addError(new ObjectError(meetingInfo, "clashing", "Clashing meeting"));
             }
         }
-
         return errors;
     }
 }

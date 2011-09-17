@@ -129,7 +129,7 @@ public class MeetingActivity extends Activity {
                 if (mMeeting != null) {
                     popup(ActionEnum.EDIT, start, end);
                 } else {
-                    createNewMeeting(start, end);
+                    createNewMeeting(false, start, end);
                 }
 
             }
@@ -204,7 +204,7 @@ public class MeetingActivity extends Activity {
                 if (!check) {
                     checkAdmin = checkAdminPass(pinText.getText().toString());
                 }
-                if (check || checkAdmin ) {
+                if (check || checkAdmin) {
                     switch (action) {
                         case DELETE:
                             if (mMeeting == null) {
@@ -213,29 +213,35 @@ public class MeetingActivity extends Activity {
                                 toast.show();
                             } else {
                                 MeetingManager.delete(mMeeting.getId());
-                                // If meeting has been deleted as a normal user show a
-                                // simple toast messsage. If deleted as admin show a dialog
-                                if ( check ) {
+                                // If meeting has been deleted as a normal user
+                                // show a
+                                // simple toast messsage. If deleted as admin
+                                // show a dialog
+                                if (check) {
                                     Toast toast = Toast.makeText(getApplicationContext(),
-                                        "Meeting deleted", Toast.LENGTH_SHORT);
+                                            "Meeting deleted", Toast.LENGTH_SHORT);
                                     toast.show();
-                                } else if ( checkAdmin ) {
+                                } else if (checkAdmin) {
                                     alertDialog.setTitle("Meeting deleted");
                                     alertDialog.setCancelable(false);
-                                    alertDialog.setMessage("Please contact " + mMeeting.getUser().getEmail() +
-                                                            " to inform about his/her meeting being cancelled.");
-                                    alertDialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            finish();
-                                        }
-                                    });
+                                    alertDialog.setMessage("Please contact "
+                                            + mMeeting.getUser().getEmail() +
+                                            " to inform about his/her meeting being cancelled.");
+                                    alertDialog.setNeutralButton("OK",
+                                            new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog,
+                                                        int which) {
+                                                    finish();
+                                                }
+                                            });
                                     alertDialog.show();
                                 }
                             }
-                            // The dialog when deleting a meeting as admin already takes
+                            // The dialog when deleting a meeting as admin
+                            // already takes
                             // care of finishing the activity
-                            if ( !checkAdmin ) {
+                            if (!checkAdmin) {
                                 finish();
                             }
                             break;
@@ -250,7 +256,7 @@ public class MeetingActivity extends Activity {
                             finish();
                             break;
                         case NEW_AS_ADMIN:
-                            createNewMeeting(start, end);
+                            createNewMeeting(true, start, end);
                             break;
                     }
                 } else {
@@ -365,11 +371,16 @@ public class MeetingActivity extends Activity {
         }
     }
 
-    private boolean createNewMeeting(Time start, Time end) {
+    private boolean createNewMeeting(boolean asAdmin, Time start, Time end) {
         try {
-            MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText()
-                    .toString(), nameEdit
-                    .getText().toString(), emailEdit.getText().toString());
+            MeetingInfo myMI;
+            if (asAdmin) {
+                myMI = MeetingManager.bookAsAdmin(start, end, titleEdit.getText().toString(),
+                        nameEdit.getText().toString(), emailEdit.getText().toString());
+            } else {
+                myMI = MeetingManager.book(start, end, titleEdit.getText().toString(), nameEdit
+                        .getText().toString(), emailEdit.getText().toString());
+            }
 
             alertDialog.setTitle("Booking PIN code: " + myMI.getPin());
             alertDialog.setCancelable(false);

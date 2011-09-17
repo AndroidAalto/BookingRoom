@@ -26,7 +26,7 @@ import java.util.List;
  * Class holding the results of the validation.
  * 
  * @author hannu
- * @see Validator#validate(Object)
+ * @see Validator#fullValidate(Object)
  */
 public class ValidationResult {
     private final List<ObjectError> errors;
@@ -42,6 +42,10 @@ public class ValidationResult {
     public ObjectError addError(ObjectError e) {
         errors.add(e);
         return e;
+    }
+
+    public void addAll(ValidationResult result) {
+        errors.addAll(result.getErrors());
     }
 
     public List<ObjectError> getErrors() {
