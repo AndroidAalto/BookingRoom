@@ -49,6 +49,11 @@ public class MeetingManager {
         return book(new MeetingInfo(new UserInfo(contactName, contactMail), start, end, title, generatePin()));
     }
 
+    public static MeetingInfo bookAsAdmin(Time start, Time end, String title, String contactName,
+            String contactMail) throws ValidationException {
+        return bookAsAdmin(new MeetingInfo(new UserInfo(contactName, contactMail), start, end, title, generatePin()));
+    }
+
     /**
      * Books the meeting. Synchronously calls <code>onNewMeeting</code> to all
      * the registered listeners.
@@ -58,9 +63,30 @@ public class MeetingManager {
      * @throws ValidationException When the preconditions fail.
      */
     public static MeetingInfo book(MeetingInfo meetingInfo) throws ValidationException {
-        final ValidationResult result = validator.validate(meetingInfo);
+        final ValidationResult result = validator.fullValidate(meetingInfo);
         if (result.hasErrors())
             throw new ValidationException(result, "There were validation errors in " + meetingInfo);
+        final MeetingInfo booked = doBook(meetingInfo);
+        return booked;
+    }
+
+    /**
+     * Books the meeting. Synchronously calls <code>onNewMeeting</code> to all
+     * the registered listeners.
+     * 
+     * @param meetingInfo The meeting to be booked.
+     * @return The meeting stored.
+     * @throws ValidationException When the preconditions fail.
+     */
+    public static MeetingInfo bookAsAdmin(MeetingInfo meetingInfo) throws ValidationException {
+        final ValidationResult result = validator.minimumValidate(meetingInfo);
+        if (result.hasErrors())
+            throw new ValidationException(result, "There were validation errors in " + meetingInfo);
+        final MeetingInfo booked = doBook(meetingInfo);
+        return booked;
+    }
+
+    private static MeetingInfo doBook(MeetingInfo meetingInfo) {
         Log.d(TAG, "Booking: " + meetingInfo);
         User user = UserDb.get(meetingInfo.getUser().getEmail());
         if (user == null)
@@ -169,7 +195,7 @@ public class MeetingManager {
      * @param meeting
      */
     public static void update(MeetingInfo meetingInfo) throws ValidationException {
-        final ValidationResult result = validator.validate(meetingInfo);
+        final ValidationResult result = validator.fullValidate(meetingInfo);
         if (result.hasErrors())
             throw new ValidationException(result, "There were validation errors in " + meetingInfo);
 

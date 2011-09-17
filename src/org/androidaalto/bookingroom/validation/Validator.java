@@ -29,5 +29,5 @@ public interface Validator<T> {
      * @param object The object to validate
      * @return The result of validation
      */
-    ValidationResult validate(T object);
+    ValidationResult fullValidate(T object);
 }
