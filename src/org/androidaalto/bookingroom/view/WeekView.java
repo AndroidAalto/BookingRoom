@@ -35,6 +35,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
@@ -582,6 +583,22 @@ public class WeekView extends View implements MeetingEventListener {
         }
 
         drawFixedAreas(viewCanvas);
+    }
+
+    private void copyWartermarkToCanvas(Canvas canvas) {
+        Bitmap watermark = BitmapFactory.decodeResource(mResources,
+                R.drawable.background_vg_android);
+        Rect src = mSrcRect;
+        src.top = 0;
+        src.left = 0;
+        src.bottom = watermark.getHeight();
+        src.right = watermark.getWidth();
+        Rect dst = mDestRect;
+        dst.top = mBitmapHeight/2 - watermark.getHeight()/2;
+        dst.bottom = mBitmapHeight/2 + watermark.getHeight()/2;
+        dst.left = mNavigationWidth;
+        dst.right = mViewWidth - 2 * mNavigationWidth;
+        canvas.drawBitmap(watermark, src, dst, null);
     }
 
     private void clearEntireView(Canvas canvas) {
@@ -1167,6 +1184,7 @@ public class WeekView extends View implements MeetingEventListener {
         r.left = 0;
         r.right = mViewWidth;
         canvas.drawRect(r, p);
+        copyWartermarkToCanvas(canvas);
     }
 
     private void remeasure(int width, int height) {
