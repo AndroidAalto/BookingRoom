@@ -313,6 +313,11 @@ public class MeetingActivity extends Activity {
 
     private void setTimeValues(Time start, Time end) {
         updateHeaderDate(start);
+        
+        // Avoid a nasty bug when user taps the lowest (empty) line on the week view grid
+        if (start.hour >= 24) {
+            start.hour = 23;
+        }
 
         startPicker.setCurrentHour(start.hour);
         startPicker.setCurrentMinute(start.minute);

@@ -28,6 +28,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -43,6 +45,11 @@ public class ScreensaverView extends SurfaceView implements SurfaceHolder.Callba
     private int width = -1;
     private int height = -1;
     private Speed speed = null;
+    private static int BIG_FONT_SIZE = 28;
+    private Paint mPaint = new Paint();
+    private Rect mRect = new Rect();
+    private String msg;
+    private static float mScale;
 
     public ScreensaverView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -65,6 +72,17 @@ public class ScreensaverView extends SurfaceView implements SurfaceHolder.Callba
     private void init() {
         getHolder().addCallback(this);
         mover = new Mover(getHolder(), this);
+        msg = getContext().getString(R.string.screensaver_msg);
+        calculateScaleFonts();
+    }
+
+    private void calculateScaleFonts() {
+        if (mScale == 0) {
+            mScale = getContext().getResources().getDisplayMetrics().density;
+            if (mScale != 1) {
+                BIG_FONT_SIZE *= mScale;
+            }
+        }
     }
 
     public void setImage(int resId) {
@@ -100,8 +118,23 @@ public class ScreensaverView extends SurfaceView implements SurfaceHolder.Callba
     }
 
     public void render(Canvas canvas) {
+        Paint p = mPaint;
         canvas.drawColor(Color.BLACK);
-        canvas.drawBitmap(image, left, top, new Paint());
+        canvas.drawBitmap(image, left, top, p);
+        drawMessage(canvas, p);
+    }
+
+    private void drawMessage(Canvas canvas, Paint p) {
+        p.setTextSize(BIG_FONT_SIZE);
+        p.setTextAlign(Paint.Align.CENTER);
+        p.setTypeface(Typeface.DEFAULT_BOLD);
+        p.setAntiAlias(true);
+        Rect bounds = mRect;
+        p.getTextBounds(msg, 0, msg.length(), bounds);
+        int x = width / 2;
+        int y = height - bounds.height() / 2;
+        p.setColor(Color.WHITE);
+        canvas.drawText(msg, x, y, p);
     }
 
     public void update() {

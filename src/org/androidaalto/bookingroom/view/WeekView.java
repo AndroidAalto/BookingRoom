@@ -1188,6 +1188,7 @@ public class WeekView extends View implements MeetingEventListener {
     }
 
     private void remeasure(int width, int height) {
+        mFirstCell = mBannerPlusMargin;
         mGridAreaHeight = height - mFirstCell;
         mCellHeight = (mGridAreaHeight - ((mNumHours + 1) * HOUR_GAP)) / mNumHours;
         Log.d(TAG, "maxViewStartY: " + mMaxViewY);
@@ -1196,7 +1197,6 @@ public class WeekView extends View implements MeetingEventListener {
         int bottomSpace = mGridAreaHeight - usedGridAreaHeight;
         MeetingGeometry.setHourHeight(mCellHeight);
 
-        mFirstCell = mBannerPlusMargin;
 
         createOffscreenBitmapAndCanvas(width, bottomSpace);
         mMaxViewY = mBitmapHeight - mGridAreaHeight;
