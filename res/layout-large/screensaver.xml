@@ -8,7 +8,7 @@
 	android:layout_height="fill_parent">
 	<org.androidaalto.bookingroom.view.ScreensaverView 
 		android:orientation="vertical"
-		app:image="@drawable/androidaalto_screensaver_small" 
+		app:image="@drawable/androidaalto_screensaver_big" 
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent" />
 </LinearLayout>

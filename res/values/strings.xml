@@ -26,12 +26,14 @@
     <string name="hintTitle">Describe your meeting</string>
     <string name="hintName">Your name</string>
     <string name="hintEmail">Your email address</string>
+    <string name="bookAdmin">Book as admin</string>
+    
+    <!-- Week view -->
     <string name="next_week">Next week</string>
     <string name="previous_week">Previous week</string>
     <string name="go_to_today">Go to today</string>
     
     <!-- About -->
-    
     <string name="aboutTxt">
 (C) AndroidAalto 2011\n\n\
 <b>TODO</b> some text in here\n\
