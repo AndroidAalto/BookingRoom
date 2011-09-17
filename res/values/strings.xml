@@ -35,7 +35,10 @@
     
     <!-- About -->
     <string name="aboutTxt">
-(C) AndroidAalto 2011\n\n\
-<b>TODO</b> some text in here\n\
+(C) AndroidAalto 2011\n\
+<b>http://androidaalto.org/bookingroom/</b>\n\n\
+<b>Authors: </b>@j_u_s_h @hleinone @josepmariaroca @gellevi\n\n\
+<b>Source code: </b>https://github.com/AndroidAalto/BookingRoom\n\
+Released under GNU General Public License version 3\n\
 </string>
 </resources>

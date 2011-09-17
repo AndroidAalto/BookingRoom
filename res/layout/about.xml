@@ -10,6 +10,7 @@
         android:src="@drawable/androidaalto_logo"
         android:layout_marginBottom="10dip"
         android:gravity="center_vertical|center_horizontal"
+        android:layout_centerHorizontal="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
     </ImageView>
