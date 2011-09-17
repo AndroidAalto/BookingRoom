@@ -10,19 +10,19 @@
     <!--  Add meeting -->
     <string name="meetingHeaderText">Meeting</string>
     <string name="meetingLabelText">Title</string>
-    
-    <string name="scheduleHeaderText"><u>Schedule</u></string>
+    <string name="scheduleHeaderText">
+        <u>Schedule</u>
+    </string>
     <string name="scheduleStartLabel">Start</string>
     <string name="scheduleEndLabel">End</string>
-    
-    <string name="contactHeaderText"><u>Your contact details</u></string>
+    <string name="contactHeaderText">
+        <u>Your contact details</u>
+    </string>
     <string name="contactNameLabel">Name</string>
     <string name="contactEmailLabel">Email</string>
-    
     <string name="buttonOK">OK</string>
     <string name="buttonCancel">Cancel</string>
     <string name="buttonDelete">Delete</string>
-    
     <string name="hintTitle">Describe your meeting</string>
     <string name="hintName">Your name</string>
     <string name="hintEmail">Your email address</string>
@@ -35,10 +35,13 @@
     
     <!-- About -->
     <string name="aboutTxt">
-(C) AndroidAalto 2011\n\
-<b>http://androidaalto.org/bookingroom/</b>\n\n\
-<b>Authors: </b>@j_u_s_h @hleinone @josepmariaroca @gellevi\n\n\
-<b>Source code: </b>https://github.com/AndroidAalto/BookingRoom\n\
-Released under GNU General Public License version 3\n\
-</string>
+        (C) AndroidAalto 2011\n\
+        <b>http://androidaalto.org/bookingroom/</b>
+        \n\n\
+        <b>Authors:</b>
+        @j_u_s_h @hleinone @josepmariaroca @gellevi\n\n\
+        <b>Source code:</b>
+        https://github.com/AndroidAalto/BookingRoom\n\ Released under GNU General Public License version 3\n\
+    </string>
+    <string name="screensaver_msg">Tap to book this room</string>
 </resources>
