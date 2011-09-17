@@ -33,10 +33,15 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.SpannableString;
 import android.text.format.Time;
+import android.text.method.PasswordTransformationMethod;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -75,13 +80,18 @@ public class MeetingActivity extends Activity {
      */
     private MeetingInfo mMeeting = null;
 
+    private static enum ActionEnum {
+        NEW_AS_ADMIN, EDIT, DELETE;
+    }
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.meeting);
 
-        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        this.getWindow()
+                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         meetingHeader = (TextView) findViewById(R.id.meetingHeader);
         startPicker = (TimePicker) findViewById(R.id.startPicker);
@@ -112,24 +122,12 @@ public class MeetingActivity extends Activity {
         buttonOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Time start = new Time();
-                start.set(0, startPicker.getCurrentMinute(), startPicker.getCurrentHour(), day,
-                        month, year);
-                start.normalize(true);
+                Time start = getStartTime();
 
-                Time end = new Time();
-                end.set(0, endPicker.getCurrentMinute(), endPicker.getCurrentHour(), day, month,
-                        year);
-                end.normalize(true);
-
-                // Add one day to the end date if is earlier than start
-                if (end.before(start)) {
-                    end.monthDay++;
-                    end.normalize(true);
-                }
+                Time end = getEndTime(start);
 
                 if (mMeeting != null) {
-                    popup(false, start, end);
+                    popup(ActionEnum.EDIT, start, end);
                 } else {
                     createNewMeeting(start, end);
                 }
@@ -147,7 +145,7 @@ public class MeetingActivity extends Activity {
         buttonDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                popup(true, null, null);
+                popup(ActionEnum.DELETE, null, null);
             }
         });
 
@@ -182,15 +180,21 @@ public class MeetingActivity extends Activity {
         return null;
     }
 
-    private void popup(final boolean isDelete, final Time start, final Time end) {
+    private void popup(final ActionEnum action, final Time start, final Time end) {
         dialog = new Dialog(MeetingActivity.this);
         dialog.setContentView(R.layout.editpin);
-        dialog.setTitle("Introduce your pin code");
+        pinText = (EditText) dialog.findViewById(R.id.pincode);
+        String title = "Introduce your pin code";
+        if (action == ActionEnum.NEW_AS_ADMIN) {
+            title = "Introduce admin password";
+            pinText.setTransformationMethod(new PasswordTransformationMethod());
+            pinText.setRawInputType(InputType.TYPE_CLASS_NUMBER);
+        }
+        dialog.setTitle(title);
         dialog.setCancelable(true);
         dialog.show();
 
         Button pinButtonOk = (Button) dialog.findViewById(R.id.pinButtonOk);
-        pinText = (EditText) dialog.findViewById(R.id.pincode);
 
         pinButtonOk.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,19 +204,34 @@ public class MeetingActivity extends Activity {
                     check = checkAdminPass(pinText.getText().toString());
                 }
                 if (check) {
-                    if (mMeeting != null) {
-                        Log.i(TAG, "id is " + mMeeting.getId());
-
-                        if (isDelete) {
-                            MeetingManager.delete(mMeeting.getId());
-                            Toast toast = Toast.makeText(getApplicationContext(), "Meeting deleted",
-                                    Toast.LENGTH_SHORT);
-                            toast.show();
-                        } else {
-                            updateMeeting(MeetingActivity.this, start, end);
-                        }
+                    switch (action) {
+                        case DELETE:
+                            if (mMeeting == null) {
+                                Toast toast = Toast.makeText(getApplicationContext(),
+                                        "Unable to delete meeting", Toast.LENGTH_SHORT);
+                                toast.show();
+                            } else {
+                                MeetingManager.delete(mMeeting.getId());
+                                Toast toast = Toast.makeText(getApplicationContext(),
+                                        "Meeting deleted", Toast.LENGTH_SHORT);
+                                toast.show();
+                            }
+                            finish();
+                            break;
+                        case EDIT:
+                            if (mMeeting == null) {
+                                Toast toast = Toast.makeText(getApplicationContext(),
+                                        "Unable to edit meeting", Toast.LENGTH_SHORT);
+                                toast.show();
+                            } else {
+                                updateMeeting(MeetingActivity.this, start, end);
+                            }
+                            finish();
+                            break;
+                        case NEW_AS_ADMIN:
+                            createNewMeeting(start, end);
+                            break;
                     }
-                    finish();
                 } else {
                     Toast toast = Toast.makeText(getApplicationContext(), "Wrong pin",
                             Toast.LENGTH_SHORT);
@@ -325,7 +344,7 @@ public class MeetingActivity extends Activity {
         }
     }
 
-    private void createNewMeeting(Time start, Time end) {
+    private boolean createNewMeeting(Time start, Time end) {
         try {
             MeetingInfo myMI = MeetingManager.book(start, end, titleEdit.getText()
                     .toString(), nameEdit
@@ -342,8 +361,10 @@ public class MeetingActivity extends Activity {
                 }
             });
             alertDialog.show();
+            return true;
         } catch (ValidationException e) {
             showError(e);
+            return false;
         }
     }
 
@@ -359,8 +380,50 @@ public class MeetingActivity extends Activity {
 
     private void updateHeaderDate(Time time) {
         SpannableString contentUnderline = new SpannableString(
-                getResources().getString(R.string.meetingHeaderText) + " - " + time.format("%d/%m/%Y"));
+                getResources().getString(R.string.meetingHeaderText) + " - "
+                        + time.format("%d/%m/%Y"));
         contentUnderline.setSpan(new UnderlineSpan(), 0, contentUnderline.length(), 0);
         meetingHeader.setText(contentUnderline);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.meeting_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.bookAdmin:
+                Time start = getStartTime();
+                Time end = getEndTime(start);
+                popup(ActionEnum.NEW_AS_ADMIN, start, end);
+                break;
+        }
+        return false;
+    }
+
+    private Time getStartTime() {
+        Time start = new Time();
+        start.set(0, startPicker.getCurrentMinute(), startPicker.getCurrentHour(), day,
+                month, year);
+        start.normalize(true);
+        return start;
+    }
+
+    private Time getEndTime(Time start) {
+        Time end = new Time();
+        end.set(0, endPicker.getCurrentMinute(), endPicker.getCurrentHour(), day, month,
+                year);
+        end.normalize(true);
+
+        // Add one day to the end date if is earlier than start
+        if (end.before(start)) {
+            end.monthDay++;
+            end.normalize(true);
+        }
+        return end;
     }
 }
