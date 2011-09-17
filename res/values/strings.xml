@@ -43,5 +43,7 @@
         <b>Source code:</b>
         https://github.com/AndroidAalto/BookingRoom\n\ Released under GNU General Public License version 3\n\
     </string>
-    <string name="screensaver_msg">Tap to book this room</string>
+    
+    <!-- Screensaver -->
+    <string name="screensaver_msg">Touch me!</string>
 </resources>
