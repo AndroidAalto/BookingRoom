@@ -24,6 +24,7 @@ import org.androidaalto.bookingroom.logic.UserManager;
 import org.androidaalto.bookingroom.model.User;
 import org.androidaalto.bookingroom.model.db.DataBaseHelper;
 import org.androidaalto.bookingroom.model.db.UserDb;
+import org.androidaalto.bookingroom.services.GoogleCalendarService;
 import org.androidaalto.bookingroom.view.WeekView;
 
 import android.app.Activity;
@@ -85,6 +86,16 @@ public class MainActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
+    }
+    
+    @Override
+    protected void onStart() {
+        super.onStart();
+        startDataFetchService();
+    }
+    private void startDataFetchService() {
+        Intent serviceIntent = new Intent(this, GoogleCalendarService.class);
+        startService(serviceIntent);
     }
 
     @Override
