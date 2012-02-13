@@ -219,8 +219,7 @@ public class ScreensaverView extends SurfaceView implements SurfaceHolder.Callba
         private int yDirection = DIRECTION_DOWN;
 
         public Speed() {
-            this.xv = 1;
-            this.yv = 1;
+            this(1,1);
         }
 
         public Speed(float xv, float yv) {

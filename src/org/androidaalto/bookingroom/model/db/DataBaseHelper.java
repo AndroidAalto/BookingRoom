@@ -20,7 +20,6 @@
 package org.androidaalto.bookingroom.model.db;
 
 import org.androidaalto.bookingroom.R;
-import org.androidaalto.bookingroom.model.User;
 
 import android.content.Context;
 import android.content.res.Resources;
