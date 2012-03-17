@@ -31,13 +31,17 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.Events;
 
 import org.androidaalto.bookingroom.R;
+import org.androidaalto.bookingroom.logic.MeetingManager;
+import org.androidaalto.bookingroom.validation.ValidationException;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.text.format.Time;
 import android.util.Log;
 
 import java.io.IOException;
@@ -98,6 +102,16 @@ public class GoogleCalendarService extends Service {
         while (true) {
           for (Event event : events.getItems()) {
             Log.d(LOG_TAG, event.toPrettyString());
+            Time start = new Time();
+            start.parse3339(event.getStart().getDateTime().toStringRfc3339());
+            Time end = new Time();
+            end.parse3339(event.getEnd().getDateTime().toStringRfc3339());
+            start.normalize(true);
+            try {
+                MeetingManager.book(start , end, event.getSummary(), "fake", "fake@fake.com");
+            } catch (ValidationException e) {
+                Log.e(LOG_TAG, "Unable to add calendar event " + event.getSummary(), e);
+            }
           }
           String pageToken = events.getNextPageToken();
           if (pageToken != null && pageToken.length() != 0) {
