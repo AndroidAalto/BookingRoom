@@ -22,7 +22,7 @@ package org.androidaalto.bookingroom.validation;
 /**
  * @author hannu
  */
-public class ValidationException extends Exception {
+public class ValidationException extends RuntimeException {
     private static final long serialVersionUID = -8754467148756239632L;
     private final ValidationResult errors;
 
