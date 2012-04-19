@@ -16,6 +16,7 @@
    You should have received a copy of the GNU General Public License
    along with BookingRoom. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.androidaalto.bookingroom.services;
 
 import com.google.api.client.googleapis.auth.oauth2.draft10.GoogleAccessProtectedResource;
@@ -36,6 +37,7 @@ import com.google.api.services.calendar.model.Events;
 
 import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingManager;
+import org.androidaalto.bookingroom.util.DateUtils;
 import org.androidaalto.bookingroom.validation.ValidationException;
 
 import android.app.Service;
@@ -76,6 +78,8 @@ public class GoogleCalendarService extends Service {
     }
 
     public void setUp() throws IOException {
+        Time firstDayOfThisWeek = DateUtils.getFirstDayOfThisWeek();
+
         HttpTransport httpTransport = new NetHttpTransport();
         JacksonFactory jsonFactory = new JacksonFactory();
 
@@ -95,30 +99,26 @@ public class GoogleCalendarService extends Service {
                 .setApplicationName("BOOKING_ROOM")
                 .setHttpRequestInitializer(accessProtectedResource)
                 .build();
-        
+
         String boardRoomId = getString(R.string.board_room_calendar_id);
         Events events = service.events().list(boardRoomId).execute();
 
         while (true) {
-          for (Event event : events.getItems()) {
-            Log.d(LOG_TAG, event.toPrettyString());
-            Time start = new Time();
-            start.parse3339(event.getStart().getDateTime().toStringRfc3339());
-            Time end = new Time();
-            end.parse3339(event.getEnd().getDateTime().toStringRfc3339());
-            start.normalize(true);
-            try {
-                MeetingManager.book(start , end, event.getSummary(), "fake", "fake@fake.com");
-            } catch (ValidationException e) {
-                Log.e(LOG_TAG, "Unable to add calendar event " + event.getSummary(), e);
+            for (Event event : events.getItems()) {
+                Log.d(LOG_TAG, event.toPrettyString());
+                Time start = new Time();
+                start.parse3339(event.getStart().getDateTime().toStringRfc3339());
+                Time end = new Time();
+                end.parse3339(event.getEnd().getDateTime().toStringRfc3339());
+                if (end.before(firstDayOfThisWeek))
+                    continue;
+                start.normalize(true);
+                MeetingManager.book(start, end, event.getSummary(), "fake", "fake@fake.com");
             }
-          }
-          String pageToken = events.getNextPageToken();
-          if (pageToken != null && pageToken.length() != 0) {
+            String pageToken = events.getNextPageToken();
+            if (pageToken == null || pageToken.length() == 0)
+                break;
             events = service.events().list(boardRoomId).setPageToken(pageToken).execute();
-          } else {
-            break;
-          }
         }
     }
 
