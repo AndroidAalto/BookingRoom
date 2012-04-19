@@ -113,7 +113,7 @@ public class GoogleCalendarService extends Service {
                 if (end.before(firstDayOfThisWeek))
                     continue;
                 start.normalize(true);
-                MeetingManager.book(start, end, event.getSummary(), "fake", "fake@fake.com");
+                MeetingManager.storeEvent(start, end, event.getSummary(), "fake", "fake@fake.com");
             }
             String pageToken = events.getNextPageToken();
             if (pageToken == null || pageToken.length() == 0)

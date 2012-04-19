@@ -19,6 +19,7 @@
 
 package org.androidaalto.bookingroom;
 
+import org.androidaalto.bookingroom.logic.MeetingManager;
 import org.androidaalto.bookingroom.logic.UserInfo;
 import org.androidaalto.bookingroom.logic.UserManager;
 import org.androidaalto.bookingroom.model.User;
@@ -29,7 +30,10 @@ import org.androidaalto.bookingroom.view.WeekView;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
@@ -50,12 +54,29 @@ public class MainActivity extends Activity {
     private Runnable screensaverLauncher;
     private Dialog dialog = null;
 
+    /***
+     * BroadcastReceiver for notifying of Meeting events through the main thread
+     */
+    final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(MeetingManager.NEW_MEETING_ACTION)) {
+                Long meetingID= intent.getLongExtra("meeting_id", -1);
+                Log.d(TAG, "New meeting: " + meetingID);
+                MeetingManager.triggerOnNewMeetingEvent(meetingID);
+            }
+        }
+    };
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         DataBaseHelper.setContext(this.getBaseContext());
+        MeetingManager.setAppContext(getApplicationContext());
         setContentView(R.layout.main);
+        IntentFilter filter = new IntentFilter(MeetingManager.NEW_MEETING_ACTION);
+        registerReceiver(mBroadcastReceiver, filter);
 
         title = (TextView) findViewById(R.id.title);
         currentView = (WeekView) findViewById(R.id.weekView);
@@ -87,12 +108,13 @@ public class MainActivity extends Activity {
     public void onResume() {
         super.onResume();
     }
-    
+
     @Override
     protected void onStart() {
         super.onStart();
         startDataFetchService();
     }
+
     private void startDataFetchService() {
         Intent serviceIntent = new Intent(this, GoogleCalendarService.class);
         startService(serviceIntent);
