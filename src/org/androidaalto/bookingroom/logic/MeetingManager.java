@@ -26,6 +26,8 @@ import org.androidaalto.bookingroom.model.db.UserDb;
 import org.androidaalto.bookingroom.validation.ValidationException;
 import org.androidaalto.bookingroom.validation.ValidationResult;
 
+import android.content.Context;
+import android.content.Intent;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -43,6 +45,10 @@ public class MeetingManager {
     private static final MeetingInfoValidator validator = new MeetingInfoValidator();
 
     private static Set<MeetingEventListener> listeners = new HashSet<MeetingEventListener>();
+    
+    private static Context appContext = null;
+    
+    public static String NEW_MEETING_ACTION = "org.androidaalto.bookingroom.new_meeting_action";
 
     public static MeetingInfo book(Time start, Time end, String title, String contactName,
             String contactMail) throws ValidationException {
@@ -110,9 +116,22 @@ public class MeetingManager {
         final MeetingInfo booked = new MeetingInfo(meeting.getId(), null, meeting.getStart(),
                 meeting.getEnd(),
                 meeting.getTitle(), meeting.getPin());
-        triggerOnNewMeetingEvent(booked.getId());
+        sendNewMeetingIntent(booked.getId());
         Log.d(TAG, "Booked: " + booked);
         return booked;
+    }
+
+    /**
+     * @param id
+     */
+    private static void sendNewMeetingIntent(Long id) {
+        if (appContext == null) {
+            Log.e(TAG, "Application context was not set. Unable to send new intents");
+            return;
+        }
+        Intent newMeetingIntent = new Intent(NEW_MEETING_ACTION);
+        newMeetingIntent.putExtra("meeting_id", id.longValue());
+        appContext.sendBroadcast(newMeetingIntent);
     }
 
     /**
@@ -183,7 +202,7 @@ public class MeetingManager {
         listeners.remove(listener);
     }
 
-    private static void triggerOnNewMeetingEvent(Long meetingId) {
+    public static void triggerOnNewMeetingEvent(Long meetingId) {
         for (MeetingEventListener listener : listeners) {
             listener.onNewMeeting(meetingId);
         }
@@ -223,6 +242,10 @@ public class MeetingManager {
         int r = rand.nextInt(9000) + 1000;
         Log.d(TAG, "My rand " + r);
         return r;
+    }
+
+    public static void setAppContext(Context appContext) {
+        MeetingManager.appContext = appContext;
     }
 
 }
