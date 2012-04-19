@@ -31,14 +31,13 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.Calendar.Events.List;
 import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.Events;
 
 import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingManager;
 import org.androidaalto.bookingroom.util.DateUtils;
-import org.androidaalto.bookingroom.validation.ValidationException;
 
 import android.app.Service;
 import android.content.Intent;
@@ -101,7 +100,20 @@ public class GoogleCalendarService extends Service {
                 .build();
 
         String boardRoomId = getString(R.string.board_room_calendar_id);
-        Events events = service.events().list(boardRoomId).execute();
+        List listEvents = service.events().list(boardRoomId);
+
+        Time now = new Time();
+        now.setToNow();
+        String min = now.format3339(false);
+        listEvents.setTimeMin(min);
+        Time maxTime = new Time(now);
+        maxTime.monthDay += 5;
+        maxTime.normalize(true);
+        String max = maxTime.format3339(false);
+        listEvents.setTimeMax(max);
+        Log.d(LOG_TAG,
+                "Fetching from : " + listEvents.getTimeMin() + " to " + listEvents.getTimeMax());
+        Events events = listEvents.execute();
 
         while (true) {
             for (Event event : events.getItems()) {
@@ -118,7 +130,8 @@ public class GoogleCalendarService extends Service {
             String pageToken = events.getNextPageToken();
             if (pageToken == null || pageToken.length() == 0)
                 break;
-            events = service.events().list(boardRoomId).setPageToken(pageToken).execute();
+            events = service.events().list(boardRoomId).setTimeMin(min).setTimeMax(max)
+                    .setPageToken(pageToken).execute();
         }
     }
 

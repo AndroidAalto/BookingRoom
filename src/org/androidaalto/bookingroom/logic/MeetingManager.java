@@ -69,9 +69,9 @@ public class MeetingManager {
      * @throws ValidationException When the preconditions fail.
      */
     public static MeetingInfo book(MeetingInfo meetingInfo) throws ValidationException {
-        final ValidationResult result = validator.fullValidate(meetingInfo);
-        if (result.hasErrors())
-            throw new ValidationException(result, "There were validation errors in " + meetingInfo);
+//        final ValidationResult result = validator.fullValidate(meetingInfo);
+//        if (result.hasErrors())
+//            throw new ValidationException(result, "There were validation errors in " + meetingInfo);
         final MeetingInfo booked = doBook(meetingInfo);
         return booked;
     }
