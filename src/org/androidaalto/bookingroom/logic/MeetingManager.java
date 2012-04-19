@@ -71,6 +71,16 @@ public class MeetingManager {
     }
 
     /**
+     * Stores the meeting event without doing any validation
+     * @return The meeting stored
+     */
+    public static MeetingInfo storeEvent(Time start, Time end, String title, String contactName,
+            String contactMail){
+        final MeetingInfo booked = doBook(new MeetingInfo(new UserInfo(contactName, contactMail), start, end, title, generatePin()));
+        return booked;
+    }
+
+    /**
      * Books the meeting. Synchronously calls <code>onNewMeeting</code> to all
      * the registered listeners.
      * 
