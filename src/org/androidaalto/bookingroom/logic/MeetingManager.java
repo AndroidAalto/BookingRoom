@@ -21,6 +21,7 @@ package org.androidaalto.bookingroom.logic;
 
 import org.androidaalto.bookingroom.model.Meeting;
 import org.androidaalto.bookingroom.model.User;
+import org.androidaalto.bookingroom.model.db.DataBaseHelper;
 import org.androidaalto.bookingroom.model.db.MeetingDb;
 import org.androidaalto.bookingroom.model.db.UserDb;
 import org.androidaalto.bookingroom.validation.ValidationException;
@@ -246,6 +247,13 @@ public class MeetingManager {
 
     public static void setAppContext(Context appContext) {
         MeetingManager.appContext = appContext;
+    }
+
+    /**
+     * Deletes the entire database
+     */
+    public static void clean() {
+        DataBaseHelper.clean();
     }
 
 }

@@ -129,6 +129,9 @@ public class GoogleCalendarService {
                 "Fetching from : " + listEvents.getTimeMin() + " to " + listEvents.getTimeMax());
         Events events = listEvents.execute();
 
+        // Remove all the current entries
+        MeetingManager.clean();
+
         while (true) {
             for (Event event : events.getItems()) {
                 Log.d(LOG_TAG, event.toPrettyString());

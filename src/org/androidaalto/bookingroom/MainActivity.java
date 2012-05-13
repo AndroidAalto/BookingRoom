@@ -88,13 +88,13 @@ public class MainActivity extends Activity {
                     true);
             UserDb.store(admin);
         }
+        startDataFetchService();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         GoogleCalendarService.stop();
-        DataBaseHelper.getInstance().close();
         dismissChangePasswordDialog();
     }
 
@@ -103,11 +103,6 @@ public class MainActivity extends Activity {
             dialog.dismiss();
             dialog = null;
         }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
     }
 
     @Override
