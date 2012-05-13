@@ -50,13 +50,40 @@ import java.io.OutputStream;
 public class GoogleCalendarService {
     private static final String REFRESH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token";
     private static String LOG_TAG = GoogleCalendarService.class.getCanonicalName();
-    private static boolean running = false;
     private static Context context;
-    private static Runnable runnable;
+    private static ExtendedRunnable runnable;
+    private static final int REFRESH_INTERVAL = 15 * 1000;
+
+    private static class ExtendedRunnable implements Runnable {
+        private boolean running;
+
+        @Override
+        public void run() {
+            running = true;
+            Thread.currentThread().setName("GoogleCalendarService.Runnable");
+            while (running) {
+                try {
+                    fetchEvents();
+                    Thread.sleep(REFRESH_INTERVAL);
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "Unable to fetch google calendar data", e);
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+
+        public boolean isRunning() {
+            return running;
+        }
+
+        public void setRunning(boolean running) {
+            this.running = running;
+        }
+    }
 
     public static void start(Context context) {
         Log.d(LOG_TAG, "GoogleCalendarService.start()");
-        if (running) {
+        if (GoogleCalendarService.runnable != null && GoogleCalendarService.runnable.isRunning()) {
             Log.w(LOG_TAG, "GoogleCalendarService already running");
             return;
         }
@@ -65,27 +92,7 @@ public class GoogleCalendarService {
             return;
         }
         GoogleCalendarService.context = context;
-        if (GoogleCalendarService.runnable == null) {
-            GoogleCalendarService.runnable = new Runnable() {
-
-                @Override
-                public void run() {
-                    running = true;
-                    Thread.currentThread().setName("GoogleCalendarService.Runnable");
-                    while (running) {
-                        try {
-                            fetchEvents();
-                            Thread.sleep(15000);
-                        } catch (IOException e) {
-                            Log.e(LOG_TAG, "Unable to fetch google calendar data", e);
-                        } catch (InterruptedException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            };
-        }
+        GoogleCalendarService.runnable = new ExtendedRunnable();
         new Thread(GoogleCalendarService.runnable).start();
     }
 
@@ -213,12 +220,8 @@ public class GoogleCalendarService {
         }
     }
 
-    public static boolean isRunning() {
-        return running;
-    }
-
     private static void setRunning(boolean running) {
-        GoogleCalendarService.running = running;
+        GoogleCalendarService.runnable.setRunning(false);
     }
 
     /**

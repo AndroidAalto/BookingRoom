@@ -76,8 +76,7 @@ public class MainActivity extends Activity {
         MeetingManager.setAppContext(getApplicationContext());
 
         setContentView(R.layout.main);
-        IntentFilter filter = new IntentFilter(MeetingManager.NEW_MEETING_ACTION);
-        registerReceiver(mBroadcastReceiver, filter);
+
         title = (TextView) findViewById(R.id.title);
         currentView = (WeekView) findViewById(R.id.weekView);
         currentView.setTitleTextView(title);
@@ -88,12 +87,12 @@ public class MainActivity extends Activity {
                     true);
             UserDb.store(admin);
         }
-        startDataFetchService();
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        unregisterReceiver(mBroadcastReceiver);
         GoogleCalendarService.stop();
         dismissChangePasswordDialog();
     }
@@ -106,9 +105,17 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onStart() {
+    protected void onResume() {
         super.onStart();
+        IntentFilter filter = new IntentFilter(MeetingManager.NEW_MEETING_ACTION);
+        registerReceiver(mBroadcastReceiver, filter);
         startDataFetchService();
+    }
+
+    @Override
+    protected void onStop() {
+        DataBaseHelper.getInstance().close();
+        super.onStop();
     }
 
     private void startDataFetchService() {
