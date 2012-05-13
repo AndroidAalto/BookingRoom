@@ -29,4 +29,8 @@ public interface MeetingEventListener {
 
     public void onEditMeeting(Long meetingId);
 
+    public void onUpdatingMeetings();
+
+    public void onFinishedUpdatingMeetings();
+
 }

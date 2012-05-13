@@ -64,8 +64,18 @@ public class Meeting {
     public String getTitle() {
         return title;
     }
-    
+
     public int getPin() {
         return pincode;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "id = " + id + " userId = " + userId + " start = " + start + " end = " + end
+                + " title = " + title + " pincode = " + pincode;
     }
 }

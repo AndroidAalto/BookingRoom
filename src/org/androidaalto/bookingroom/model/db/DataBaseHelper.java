@@ -30,7 +30,7 @@ import android.util.Log;
 public class DataBaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DataBaseHelper";
 
-    private static final String DB_NAME = "booking.db";
+    private static final String DB_NAME = null;
 
     // Remember to increase whenever you want to call onUpdate
     private static final int DB_VERSION = 1;
@@ -85,7 +85,22 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * @return
      */
     public static void setContext(Context context) {
+        Log.w(TAG, "Setting DB Helper context");
         instance = new DataBaseHelper(context);
+    }
+    
+    @Override
+    public synchronized void close() {
+        Log.w(TAG,"DataBaseHelper.close()");
+        super.close();
+    }
+
+    /**
+     * Deletes the entire database
+     */
+    public static void clean() {
+        // Since we use an in-memory DB we just need to close it.
+        instance.close();
     }
 
 }
