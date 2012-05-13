@@ -27,6 +27,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 public class UserDb {
+    private static final String USER_TABLE = "user";
+
     public static int getUserCount() {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
         Cursor cursor = null;
@@ -119,7 +121,7 @@ public class UserDb {
         value.put("is_admin", user.isAdmin());
         value.put("salt", user.getSalt());
         value.put("password", user.getPassword());
-        db.insert("user", null, value);
+        db.insert(USER_TABLE, null, value);
         return UserDb.get(user.getEmail());
     }
 
@@ -134,7 +136,7 @@ public class UserDb {
         value.put("email", user.getEmail());
         value.put("salt", user.getSalt());
         value.put("password", user.getPassword());
-        db.update("user", value, "id = ?", new String[] { "" + user.getId() });
+        db.update(USER_TABLE, value, "id = ?", new String[] { "" + user.getId() });
         return UserDb.get(user.getId());
     }
 }
