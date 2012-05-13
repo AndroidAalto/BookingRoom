@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(MeetingManager.NEW_MEETING_ACTION)) {
-                Long meetingID= intent.getLongExtra("meeting_id", -1);
+                Long meetingID = intent.getLongExtra("meeting_id", -1);
                 Log.d(TAG, "New meeting: " + meetingID);
                 MeetingManager.triggerOnNewMeetingEvent(meetingID);
             }
@@ -74,10 +74,10 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         DataBaseHelper.setContext(this.getBaseContext());
         MeetingManager.setAppContext(getApplicationContext());
+
         setContentView(R.layout.main);
         IntentFilter filter = new IntentFilter(MeetingManager.NEW_MEETING_ACTION);
         registerReceiver(mBroadcastReceiver, filter);
-
         title = (TextView) findViewById(R.id.title);
         currentView = (WeekView) findViewById(R.id.weekView);
         currentView.setTitleTextView(title);
@@ -93,6 +93,7 @@ public class MainActivity extends Activity {
     @Override
     public void onPause() {
         super.onPause();
+        GoogleCalendarService.stop();
         DataBaseHelper.getInstance().close();
         dismissChangePasswordDialog();
     }
@@ -116,8 +117,7 @@ public class MainActivity extends Activity {
     }
 
     private void startDataFetchService() {
-        Intent serviceIntent = new Intent(this, GoogleCalendarService.class);
-        startService(serviceIntent);
+        GoogleCalendarService.start(getApplicationContext());
     }
 
     @Override

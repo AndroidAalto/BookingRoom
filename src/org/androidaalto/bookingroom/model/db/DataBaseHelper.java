@@ -85,7 +85,14 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * @return
      */
     public static void setContext(Context context) {
+        Log.w(TAG, "Setting DB Helper context");
         instance = new DataBaseHelper(context);
+    }
+    
+    @Override
+    public synchronized void close() {
+        Log.w(TAG,"DataBaseHelper.close()");
+        super.close();
     }
 
 }

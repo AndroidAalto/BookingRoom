@@ -66,8 +66,6 @@ public class MeetingDb {
             if ( cursor != null ) {
                 cursor.close();
             }
-            db.close();
-            DataBaseHelper.getInstance().close();
         }
     }
 
@@ -85,8 +83,6 @@ public class MeetingDb {
             if ( cursor != null ) {
                 cursor.close();
             }
-            db.close();
-            DataBaseHelper.getInstance().close();
         }
     }
 
@@ -124,8 +120,6 @@ public class MeetingDb {
             if ( cursor != null ) {
                 cursor.close();
             }
-            db.close();
-            DataBaseHelper.getInstance().close();
         }
     }
 
