@@ -57,13 +57,25 @@ public class MainActivity extends Activity {
     /***
      * BroadcastReceiver for notifying of Meeting events through the main thread
      */
-    final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+    final BroadcastReceiver mBroadcastReceiverUpdating = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(MeetingManager.NEW_MEETING_ACTION)) {
-                Long meetingID = intent.getLongExtra("meeting_id", -1);
-                Log.d(TAG, "New meeting: " + meetingID);
-                MeetingManager.triggerOnNewMeetingEvent(meetingID);
+            if (intent.getAction().equals(MeetingManager.UPDATING_MEETINGS_ACTION)) {
+                Log.d(TAG, "Updating meetings event");
+                MeetingManager.triggerOnUpdatingMeetingsEvent();
+            }
+        }
+    };
+    
+    /***
+     * BroadcastReceiver for notifying of Meeting events through the main thread
+     */
+    final BroadcastReceiver mBroadcastReceiverFinished = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(MeetingManager.FINISHED_UPDATING_MEETINGS_ACTION)) {
+                Log.d(TAG, "Finished updating meetings event");
+                MeetingManager.triggerOnFinishedUpdatingMeetingsEvent();
             }
         }
     };
@@ -92,7 +104,8 @@ public class MainActivity extends Activity {
     @Override
     public void onPause() {
         super.onPause();
-        unregisterReceiver(mBroadcastReceiver);
+        unregisterReceiver(mBroadcastReceiverUpdating);
+        unregisterReceiver(mBroadcastReceiverFinished);
         GoogleCalendarService.stop();
         dismissChangePasswordDialog();
     }
@@ -107,8 +120,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onStart();
-        IntentFilter filter = new IntentFilter(MeetingManager.NEW_MEETING_ACTION);
-        registerReceiver(mBroadcastReceiver, filter);
+        IntentFilter filter = new IntentFilter(MeetingManager.UPDATING_MEETINGS_ACTION);
+        registerReceiver(mBroadcastReceiverUpdating, filter);
+        filter = new IntentFilter(MeetingManager.FINISHED_UPDATING_MEETINGS_ACTION);
+        registerReceiver(mBroadcastReceiverFinished, filter);
         startDataFetchService();
     }
 

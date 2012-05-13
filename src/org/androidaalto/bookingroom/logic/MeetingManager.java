@@ -49,7 +49,11 @@ public class MeetingManager {
     
     private static Context appContext = null;
     
-    public static String NEW_MEETING_ACTION = "org.androidaalto.bookingroom.new_meeting_action";
+    public static final String NEW_MEETING_ACTION = "org.androidaalto.bookingroom.new_meeting_action";
+
+    public static final String UPDATING_MEETINGS_ACTION = "org.androidaalto.bookingroom.updating_meetings_action";
+
+    public static final String FINISHED_UPDATING_MEETINGS_ACTION = "org.androidaalto.bookingroom.finished_updating_meetings_action";
 
     public static MeetingInfo book(Time start, Time end, String title, String contactName,
             String contactMail) throws ValidationException {
@@ -127,12 +131,30 @@ public class MeetingManager {
      */
     private static void sendNewMeetingIntent(Long id) {
         if (appContext == null) {
-            Log.e(TAG, "Application context was not set. Unable to send new intents");
+            Log.e(TAG, "Application context was not set. Unable to send new meeting intent '" + id +"'");
             return;
         }
         Intent newMeetingIntent = new Intent(NEW_MEETING_ACTION);
         newMeetingIntent.putExtra("meeting_id", id.longValue());
         appContext.sendBroadcast(newMeetingIntent);
+    }
+    
+    public static void sendUpdatingMeetingsIntent() {
+        if (appContext == null) {
+            Log.e(TAG, "Application context was not set. Unable to send updating meetings intent");
+            return;
+        }
+        Intent updatingMeetingsIntent = new Intent(UPDATING_MEETINGS_ACTION);
+        appContext.sendBroadcast(updatingMeetingsIntent);
+    }
+    
+    public static void sendFinishedUpdatingMeetingsIntent() {
+        if (appContext == null) {
+            Log.e(TAG, "Application context was not set. Unable to send updating meetings intent");
+            return;
+        }
+        Intent finishedUpdatingMeetingsIntent = new Intent(FINISHED_UPDATING_MEETINGS_ACTION);
+        appContext.sendBroadcast(finishedUpdatingMeetingsIntent);
     }
 
     /**
@@ -209,15 +231,27 @@ public class MeetingManager {
         }
     }
 
-    private static void triggerOnDeleteMeetingEvent(Long meetingId) {
+    public static void triggerOnDeleteMeetingEvent(Long meetingId) {
         for (MeetingEventListener listener : listeners) {
             listener.onDeleteMeeting(meetingId);
         }
     }
 
-    private static void triggerOnEditMeetingEvent(Long meetingId) {
+    public static void triggerOnEditMeetingEvent(Long meetingId) {
         for (MeetingEventListener listener : listeners) {
             listener.onEditMeeting(meetingId);
+        }
+    }
+
+    public static void triggerOnUpdatingMeetingsEvent() {
+        for (MeetingEventListener listener : listeners) {
+            listener.onUpdatingMeetings();
+        }
+    }
+    
+    public static void triggerOnFinishedUpdatingMeetingsEvent() {
+        for (MeetingEventListener listener : listeners) {
+            listener.onFinishedUpdatingMeetings();
         }
     }
 

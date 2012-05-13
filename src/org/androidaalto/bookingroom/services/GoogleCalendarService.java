@@ -136,6 +136,7 @@ public class GoogleCalendarService {
                 "Fetching from : " + listEvents.getTimeMin() + " to " + listEvents.getTimeMax());
         Events events = listEvents.execute();
 
+        MeetingManager.sendUpdatingMeetingsIntent();
         // Remove all the current entries
         MeetingManager.clean();
 
@@ -157,6 +158,7 @@ public class GoogleCalendarService {
             events = service.events().list(boardRoomId).setTimeMin(min).setTimeMax(max)
                     .setPageToken(pageToken).execute();
         }
+        MeetingManager.sendFinishedUpdatingMeetingsIntent();
     }
 
     /**
