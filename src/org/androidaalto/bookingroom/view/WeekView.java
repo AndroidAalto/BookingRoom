@@ -339,7 +339,7 @@ public class WeekView extends View implements MeetingEventListener {
 
         recalc();
 
-        loadMeetings(mBaseDate);
+        reloadMeetings(mBaseDate);
 
         MeetingManager.addMeetingEventListener(this);
     }
@@ -373,17 +373,18 @@ public class WeekView extends View implements MeetingEventListener {
         mNavigationTextWidth = r.width();
     }
 
-    /**
-     * 
-     */
-    private void loadMeetings(Time initialTime) {
+    private void reloadMeetings(Time initialTime) {
         Log.d(TAG, "BEGIN: Loading events on " + initialTime.format("%Y-%m-%d %H:%M:%S"));
         mMeetings = MeetingManager.getMeetings(initialTime, mNumDays);
-        mMeetingsGeometryInfoMap = new HashMap<MeetingGeometry, MeetingInfo>();
+        mMeetingsGeometryInfoMap.clear();
         for (MeetingInfo meetingInfo : mMeetings) {
             mMeetingsGeometryInfoMap.put(new MeetingGeometry(), meetingInfo);
         }
         Log.d(TAG, "END: Loading events.");
+    }
+    
+    private void cleanMeetings() {
+        mMeetingsGeometryInfoMap.clear();
     }
 
     private void initTimeAndDates() {
@@ -1315,8 +1316,7 @@ public class WeekView extends View implements MeetingEventListener {
                 if (mScrolling) {
                     mScrolling = false;
                     resetSelectedHour();
-                    mRedrawScreen = true;
-                    invalidate();
+                    forceRedraw();
                 }
                 return true;
 
@@ -1368,8 +1368,7 @@ public class WeekView extends View implements MeetingEventListener {
         }
 
         mSelectionMode = SELECTION_SELECTED;
-        mRedrawScreen = true;
-        invalidate();
+        forceRedraw();
 
         if (mSelectedMeetingInfo != null) {
             // If the tap is on an event, launch the "View meeting" view to edit
@@ -1430,7 +1429,7 @@ public class WeekView extends View implements MeetingEventListener {
                     + mBaseDate.format("%m %Y"));
         }
         recalc();
-        reloadMeetings();
+        reloadAndRedrawMeetings();
         invalidate();
     }
 
@@ -1581,8 +1580,7 @@ public class WeekView extends View implements MeetingEventListener {
         }
 
         mSelectionMode = SELECTION_LONGPRESS;
-        mRedrawScreen = true;
-        invalidate();
+        forceRedraw();
 
         if (mSelectedMeetingInfo != null) {
             // If the tap is on an event, launch the "View meeting" view to edit
@@ -1750,21 +1748,36 @@ public class WeekView extends View implements MeetingEventListener {
 
     @Override
     public void onNewMeeting(Long meetingId) {
-        reloadMeetings();
     }
 
     @Override
     public void onDeleteMeeting(Long meetingId) {
-        reloadMeetings();
+    }
+    
+    public void onUpdatingMeetings(){
+        cleanAndRedrawMeetings();
+    }
+    
+    public void onFinishedUpdatingMeetings(){
+        reloadAndRedrawMeetings();
     }
 
     @Override
     public void onEditMeeting(Long meetingId) {
-        reloadMeetings();
+        reloadAndRedrawMeetings();
     }
 
-    private void reloadMeetings() {
-        loadMeetings(mBaseDate);
+    private void reloadAndRedrawMeetings() {
+        reloadMeetings(mBaseDate);
+        forceRedraw();
+    }
+    
+    private void cleanAndRedrawMeetings() {
+        cleanMeetings();
+        forceRedraw();
+    }
+
+    private void forceRedraw() {
         mRedrawScreen = true;
         invalidate();
     }

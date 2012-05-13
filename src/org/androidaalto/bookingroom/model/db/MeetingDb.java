@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MeetingDb {
+    private static final String MEETING_TABLE = "meeting";
+
     public static List<Meeting> getMeetings(Time from, Time to) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getReadableDatabase();
         ArrayList<Meeting> records = new ArrayList<Meeting>();
@@ -66,8 +68,6 @@ public class MeetingDb {
             if ( cursor != null ) {
                 cursor.close();
             }
-            db.close();
-            DataBaseHelper.getInstance().close();
         }
     }
 
@@ -85,8 +85,6 @@ public class MeetingDb {
             if ( cursor != null ) {
                 cursor.close();
             }
-            db.close();
-            DataBaseHelper.getInstance().close();
         }
     }
 
@@ -124,8 +122,6 @@ public class MeetingDb {
             if ( cursor != null ) {
                 cursor.close();
             }
-            db.close();
-            DataBaseHelper.getInstance().close();
         }
     }
 
@@ -141,7 +137,7 @@ public class MeetingDb {
         value.put("start", meeting.getStart().toMillis(false));
         value.put("end", meeting.getEnd().toMillis(false));
         value.put("pincode", meeting.getPin());
-        final long id = db.insert("meeting", null, value);
+        final long id = db.insert(MEETING_TABLE, null, value);
         return MeetingDb.get(id);
     }
 
@@ -153,7 +149,7 @@ public class MeetingDb {
         value.put("start", meeting.getStart().toMillis(false));
         value.put("end", meeting.getEnd().toMillis(false));
 
-        db.update("meeting", value, "id = ?", new String[] { "" + meeting.getId() });
+        db.update(MEETING_TABLE, value, "id = ?", new String[] { "" + meeting.getId() });
         return MeetingDb.get(meeting.getId());
     }
 
@@ -163,7 +159,7 @@ public class MeetingDb {
      */
     public static int delete(long id) {
         SQLiteDatabase db = DataBaseHelper.getInstance().getWritableDatabase();
-        int result = db.delete("meeting", "id = ?", new String[] { ""+id });
+        int result = db.delete(MEETING_TABLE, "id = ?", new String[] { ""+id });
         return result;
     }
 }

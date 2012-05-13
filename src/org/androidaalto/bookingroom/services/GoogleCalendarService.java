@@ -31,18 +31,15 @@ import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.Calendar.Events.List;
 import com.google.api.services.calendar.model.Event;
-import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.Events;
 
 import org.androidaalto.bookingroom.R;
 import org.androidaalto.bookingroom.logic.MeetingManager;
 import org.androidaalto.bookingroom.util.DateUtils;
-import org.androidaalto.bookingroom.validation.ValidationException;
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
+import android.content.Context;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -50,34 +47,56 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class GoogleCalendarService extends Service {
+public class GoogleCalendarService {
     private static final String REFRESH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token";
     private static String LOG_TAG = GoogleCalendarService.class.getCanonicalName();
+    private static Context context;
+    private static ExtendedRunnable runnable;
+    private static final int REFRESH_INTERVAL = 15 * 1000;
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+    private static class ExtendedRunnable implements Runnable {
+        private boolean running;
 
-    @Override
-    public void onStart(Intent intent, int startId) {
-        Log.d(LOG_TAG, "GoogleCalendarService.onStart()");
-        Runnable r = new Runnable() {
-
-            @Override
-            public void run() {
+        @Override
+        public void run() {
+            running = true;
+            Thread.currentThread().setName("GoogleCalendarService.Runnable");
+            while (running) {
                 try {
-                    setUp();
+                    fetchEvents();
+                    Thread.sleep(REFRESH_INTERVAL);
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "Unable to fetch google calendar data", e);
+                } catch (InterruptedException e) {
                 }
             }
-        };
-        new Thread(r).start();
-        super.onStart(intent, startId);
+        }
+
+        public boolean isRunning() {
+            return running;
+        }
+
+        public void setRunning(boolean running) {
+            this.running = running;
+        }
     }
 
-    public void setUp() throws IOException {
+    public static void start(Context context) {
+        Log.d(LOG_TAG, "GoogleCalendarService.start()");
+        if (GoogleCalendarService.runnable != null && GoogleCalendarService.runnable.isRunning()) {
+            Log.w(LOG_TAG, "GoogleCalendarService already running");
+            return;
+        }
+        if (context == null) {
+            Log.e(LOG_TAG, "Context can't be null!! Calendar events won't be fetched!");
+            return;
+        }
+        GoogleCalendarService.context = context;
+        GoogleCalendarService.runnable = new ExtendedRunnable();
+        new Thread(GoogleCalendarService.runnable).start();
+    }
+
+    public static void fetchEvents() throws IOException {
         Time firstDayOfThisWeek = DateUtils.getFirstDayOfThisWeek();
 
         HttpTransport httpTransport = new NetHttpTransport();
@@ -85,9 +104,9 @@ public class GoogleCalendarService extends Service {
 
         // The clientId and clientSecret are copied from the API Access tab on
         // the Google APIs Console
-        String clientId = getString(R.string.client_id);
-        String clientSecret = getString(R.string.client_secret);
-        String refreshToken = getString(R.string.refresh_token);
+        String clientId = GoogleCalendarService.context.getString(R.string.client_id);
+        String clientSecret = GoogleCalendarService.context.getString(R.string.client_secret);
+        String refreshToken = GoogleCalendarService.context.getString(R.string.refresh_token);
 
         String accessToken = refreshToken(httpTransport, clientId, clientSecret, refreshToken);
 
@@ -100,8 +119,26 @@ public class GoogleCalendarService extends Service {
                 .setHttpRequestInitializer(accessProtectedResource)
                 .build();
 
-        String boardRoomId = getString(R.string.board_room_calendar_id);
-        Events events = service.events().list(boardRoomId).execute();
+        String boardRoomId = GoogleCalendarService.context
+                .getString(R.string.board_room_calendar_id);
+        List listEvents = service.events().list(boardRoomId);
+
+        Time now = new Time();
+        now.setToNow();
+        String min = now.format3339(false);
+        listEvents.setTimeMin(min);
+        Time maxTime = new Time(now);
+        maxTime.monthDay += 5;
+        maxTime.normalize(true);
+        String max = maxTime.format3339(false);
+        listEvents.setTimeMax(max);
+        Log.d(LOG_TAG,
+                "Fetching from : " + listEvents.getTimeMin() + " to " + listEvents.getTimeMax());
+        Events events = listEvents.execute();
+
+        MeetingManager.sendUpdatingMeetingsIntent();
+        // Remove all the current entries
+        MeetingManager.clean();
 
         while (true) {
             for (Event event : events.getItems()) {
@@ -118,8 +155,10 @@ public class GoogleCalendarService extends Service {
             String pageToken = events.getNextPageToken();
             if (pageToken == null || pageToken.length() == 0)
                 break;
-            events = service.events().list(boardRoomId).setPageToken(pageToken).execute();
+            events = service.events().list(boardRoomId).setTimeMin(min).setTimeMax(max)
+                    .setPageToken(pageToken).execute();
         }
+        MeetingManager.sendFinishedUpdatingMeetingsIntent();
     }
 
     /**
@@ -127,7 +166,8 @@ public class GoogleCalendarService extends Service {
      * @return
      * @throws IOException
      */
-    private String refreshToken(HttpTransport httpTransport, String clientId, String clientSecret,
+    private static String refreshToken(HttpTransport httpTransport, String clientId,
+            String clientSecret,
             String refreshToken) throws IOException {
         HttpRequestFactory reqFactory = httpTransport.createRequestFactory();
         StringBuilder sb = new StringBuilder();
@@ -182,4 +222,14 @@ public class GoogleCalendarService extends Service {
         }
     }
 
+    private static void setRunning(boolean running) {
+        GoogleCalendarService.runnable.setRunning(false);
+    }
+
+    /**
+     * 
+     */
+    public static void stop() {
+        setRunning(false);
+    }
 }
